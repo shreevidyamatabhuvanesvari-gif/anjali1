@@ -1,134 +1,197 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>अंजली</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- ===== STYLE : शांत, स्त्री-सुलभ ===== -->
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #fafafa;
-      color: #222;
+    :root{
+      --bg1:#fff4ee;
+      --bg2:#ffe5d8;
+      --accent:#7a2e2e;
+      --soft:#b45c5c;
+      --card:#ffffff;
     }
-    .container {
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 20px;
-      text-align: center;
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", Arial, sans-serif;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    .status {
-      margin-top: 30px;
-      font-size: 18px;
-      color: #555;
+
+    .card{
+      width:92%;
+      max-width:420px;
+      background:var(--card);
+      border-radius:22px;
+      padding:22px 18px 26px;
+      box-shadow:0 14px 30px rgba(0,0,0,.12);
+      text-align:center;
     }
-    button {
-      padding: 14px 24px;
-      font-size: 16px;
-      border: none;
-      border-radius: 24px;
-      background: #e91e63;
-      color: #fff;
-      cursor: pointer;
+
+    .avatar{
+      width:110px;
+      height:110px;
+      margin:6px auto 12px;
+      border-radius:50%;
+      overflow:hidden;
+      border:3px solid #f1c7c7;
+      box-shadow:0 6px 14px rgba(0,0,0,.15);
     }
-    button:active {
-      transform: scale(0.98);
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .title{
+      font-size:26px;
+      color:var(--accent);
+      margin:6px 0 2px;
+    }
+
+    .subtitle{
+      font-size:14px;
+      color:#555;
+      margin-bottom:14px;
+    }
+
+    .status{
+      background:#fff7f4;
+      border:1px solid #f3d4c7;
+      border-radius:14px;
+      padding:12px;
+      font-size:14px;
+      color:#6b2c2c;
+      margin:12px 0;
+      min-height:42px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:16px;
+      padding:12px 18px;
+      font-size:14px;
+      cursor:pointer;
+      background:linear-gradient(180deg,#c96a6a,#a13f3f);
+      color:#fff;
+    }
+
+    .btn.secondary{
+      background:#fff;
+      color:var(--soft);
+      border:1px dashed #e6b2b2;
+    }
+
+    .footer{
+      margin-top:16px;
+      font-size:11px;
+      color:#777;
+      text-align:center;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h1>ए सुनो…</h1>
+<main class="card">
 
-  <button id="startBtn">
-    अंजली को बुलाइए
-  </button>
-
-  <div id="appStatus" class="status">
-    अंजली अभी शांत है।
+  <!-- 🌸 AVATAR (प्रतीकात्मक) -->
+  <div class="avatar">
+    <!-- आप चाहें तो अपनी पसंद की फोटो रख सकते हैं -->
+    <img src="avatar.png" alt="Anjali Presence">
   </div>
-</div>
 
-<!-- ===============================
-     CORE (सबसे पहले)
-     =============================== -->
+  <div class="title">अंजली</div>
+  <div class="subtitle">शांत • स्नेहपूर्ण • साथ बैठने वाली</div>
+
+  <!-- STATUS -->
+  <div class="status" id="appStatus">
+    ए सुनो…
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn" id="startBtn">साथ बैठें</button>
+    <button class="btn secondary" id="stopBtn">थोड़ी देर बाद</button>
+  </div>
+
+  <div class="footer">
+    यह एप उत्तर देने से पहले<br/>
+    साथ बैठना जानता है
+  </div>
+
+</main>
+
+<!-- =================================================
+     SCRIPTS — ORDER LOCKED (भविष्य-सुरक्षित)
+     ================================================= -->
+
+<!-- CORE -->
 <script src="core/AnjaliCore.js"></script>
 
-<!-- ===============================
-     VOICE SYSTEM
-     =============================== -->
+<!-- VOICE -->
 <script src="voice/tts.js"></script>
 <script src="voice/stt.js"></script>
 
-<!-- ===============================
-     KNOWLEDGE / MEMORY
-     =============================== -->
+<!-- KNOWLEDGE + MEMORY -->
 <script src="learning/KnowledgeBase.js"></script>
+<script src="learning/ExperienceMemory.js"></script>
+<script src="core/ContextMemory.js"></script>
 
-<!-- ===============================
-     THINKING / REASONING
-     =============================== -->
+<!-- ANSWER + REASONING -->
+<script src="answer/KnowledgeAnswerEngine.js"></script>
 <script src="reasoning/ReasoningEngine.js"></script>
 
-<!-- ===============================
-     RESPONSE (बोलने से पहले)
-     =============================== -->
+<!-- RESPONSE -->
 <script src="response/ResponseEngine.js"></script>
 
-<!-- ===============================
-     DIAGNOSTIC (सबसे अंत में)
-     =============================== -->
+<!-- 🌸 PRESENCE (A) -->
+<script src="presence/AnjaliPresence.js"></script>
+
+<!-- DIAGNOSTIC (LAST) -->
 <script src="diagnostics/anjali_real_diagnostic.js"></script>
+<script src="diagnostics/anjali_diagnostic_spec.js"></script>
+<script src="diagnostics/anjali_diagnostic_weights.js"></script>
+<script src="diagnostics/anjali_diagnostic_score.js"></script>
 
+<!-- =================================================
+     STABLE BINDINGS (NO FUTURE CHANGE NEEDED)
+     ================================================= -->
 <script>
-/* ===============================
-   INDEX RUNTIME CONTROL
-   =============================== */
+  const statusBox = document.getElementById("appStatus");
 
-let audioUnlocked = false;
-let conversationActive = false;
+  function startConversation(){
+    if (window.AnjaliCore) AnjaliCore.start();
+    if (window.STT) STT.start();
+    if (window.AnjaliPresence) AnjaliPresence.start();
 
-document.getElementById("startBtn").addEventListener("click", () => {
-  const status = document.getElementById("appStatus");
-
-  /* अंजली को सक्रिय करना */
-  if (window.AnjaliCore) {
-    AnjaliCore.start();
+    statusBox.textContent = "ए सुनो… मैं यहीं हूँ।";
   }
 
-  /* आवाज़ अनलॉक */
-  if (window.TTS && !audioUnlocked) {
-    try {
-      TTS.init();
-      audioUnlocked = true;
-    } catch {}
+  function stopConversation(){
+    if (window.AnjaliPresence) AnjaliPresence.stop();
+    statusBox.textContent = "ठीक है… थोड़ी देर बाद।";
   }
 
-  conversationActive = true;
-  status.textContent = "अंजली सुन रही है…";
-  
-  /* पहला शांत वाक्य — केवल एक बार */
-if (window.TTS) {
-  setTimeout(() => {
-    TTS.speak("ए सुनो… मैं यहीं हूँ।");
-  }, 600);
-}
-
-  /* STT शुरू */
-  if (window.STT) {
-    STT.start();
-  }
-
-  /* डायग्नोस्टिक को यहीं चलाना */
-  if (window.runAnjaliDiagnostic) {
-    setTimeout(() => {
-      window.runAnjaliDiagnostic();
-    }, 300);
-  }
-});
+  document.getElementById("startBtn").onclick = startConversation;
+  document.getElementById("stopBtn").onclick = stopConversation;
 </script>
 
 </body>
