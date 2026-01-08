@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>अंजली</title>
 
+  <!-- 🌸 GOOGLE FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
     body {
       margin: 0;
@@ -19,29 +22,38 @@
 
     .anjali-container {
       text-align: center;
-      max-width: 360px;
-      padding: 20px;
+      max-width: 380px;
+      padding: 24px;
     }
 
     .avatar {
-      width: 180px;
-      height: 180px;
+      width: 190px;
+      height: 190px;
       border-radius: 50%;
       object-fit: cover;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      margin-bottom: 18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+      margin-bottom: 20px;
     }
 
     .title {
-      font-size: 22px;
+      font-size: 24px;
       color: #5a2d2d;
       margin-bottom: 6px;
+      letter-spacing: 1px;
     }
 
     .subtitle {
       font-size: 14px;
       color: #7a4a4a;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
+    }
+
+    .shayari {
+      font-size: 15px;
+      color: #6b3a3a;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      font-style: italic;
     }
 
     .listen-btn {
@@ -49,10 +61,11 @@
       color: #fff;
       border: none;
       border-radius: 30px;
-      padding: 14px 28px;
+      padding: 14px 30px;
       font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      transition: transform 0.15s ease;
     }
 
     .listen-btn:active {
@@ -60,7 +73,7 @@
     }
 
     .hint {
-      margin-top: 16px;
+      margin-top: 18px;
       font-size: 13px;
       color: #6b4a4a;
     }
@@ -69,111 +82,92 @@
 
 <body>
 
-<div class="anjali-container">
+  <div class="anjali-container">
 
-  <img src="assets/anjali_avatar.jpg" alt="Anjali" class="avatar"/>
+    <!-- 🌸 REAL AVATAR (आप अपनी फोटो यहाँ रखें) -->
+    <img
+      src="assets/anjali_avatar.jpg"
+      alt="Anjali"
+      class="avatar"
+    />
 
-  <div class="title">अंजली</div>
-  <div class="subtitle">…यहीं हूँ</div>
+    <!-- 🌸 NAME (कोई घोषणा नहीं) -->
+    <div class="title">अंजली</div>
+    <div class="subtitle">…यहीं है</div>
 
-  <button class="listen-btn" id="startBtn">
-    ए सुनो…
-  </button>
+    <!-- 🌸 SHAYARI (ज्यों-की-त्यों) -->
+    <div class="shayari">
+      जो फूल यहां पर खिल न सके, ओ फूल वहां खिल जायेगें।<br/>
+      हम इस दुनियाँ में मिल न सके, उस दुनियाँ में मिल जायेगें।।
+    </div>
 
-  <div class="hint">
-    बोलिए।<br/>
-    जवाब मिले या न मिले — अंजली सुन रही है।
+    <!-- 🎤 LISTEN BUTTON -->
+    <button class="listen-btn" id="startBtn">
+      ए सुनो…
+    </button>
+
+    <!-- 🌸 EMOTIONAL HINT (सुधारा हुआ) -->
+    <div class="hint">
+      बोलिए…<br/>
+      अंजली सुन रही है।
+    </div>
+
   </div>
-</div>
 
-<!-- =================================================
-     SCRIPTS — ORDER LOCKED
-     ================================================= -->
+  <!-- =================================================
+       SCRIPTS — ORDER LOCKED (भविष्य-सुरक्षित)
+       ================================================= -->
 
-<!-- CORE -->
-<script src="core/AnjaliCore.js"></script>
+  <!-- CORE -->
+  <script src="core/AnjaliCore.js"></script>
 
-<!-- VOICE -->
-<script src="voice/tts.js"></script>
-<script src="voice/stt.js"></script>
+  <!-- VOICE -->
+  <script src="voice/tts.js"></script>
+  <script src="voice/stt.js"></script>
 
-<!-- KNOWLEDGE + MEMORY -->
-<script src="learning/KnowledgeBase.js"></script>
-<script src="learning/ExperienceMemory.js"></script>
-<script src="core/ContextMemory.js"></script>
+  <!-- KNOWLEDGE + MEMORY -->
+  <script src="learning/KnowledgeBase.js"></script>
+  <script src="learning/ExperienceMemory.js"></script>
+  <script src="core/ContextMemory.js"></script>
 
-<!-- ANSWER + REASONING -->
-<script src="answer/KnowledgeAnswerEngine.js"></script>
-<script src="reasoning/ReasoningEngine.js"></script>
+  <!-- ANSWER + REASONING -->
+  <script src="answer/KnowledgeAnswerEngine.js"></script>
+  <script src="reasoning/ReasoningEngine.js"></script>
 
-<!-- RESPONSE -->
-<script src="response/ResponseEngine.js"></script>
+  <!-- RESPONSE -->
+  <script src="response/ResponseEngine.js"></script>
 
-<!-- 🌸 PRESENCE -->
-<script src="presence/AnjaliPresence.js"></script>
+  <!-- 🌸 PRESENCE -->
+  <script src="presence/AnjaliPresence.js"></script>
 
-<!-- DIAGNOSTICS -->
-<script src="diagnostics/anjali_real_diagnostic.js"></script>
-<script src="diagnostics/anjali_diagnostic_spec.js"></script>
-<script src="diagnostics/anjali_diagnostic_weights.js"></script>
-<script src="diagnostics/anjali_diagnostic_score.js"></script>
+  <!-- DIAGNOSTICS (LAST) -->
+  <script src="diagnostics/anjali_real_diagnostic.js"></script>
+  <script src="diagnostics/anjali_diagnostic_spec.js"></script>
+  <script src="diagnostics/anjali_diagnostic_weights.js"></script>
+  <script src="diagnostics/anjali_diagnostic_score.js"></script>
 
-<!-- =================================================
-     🔗 ANJALI LIVE BRIDGE (CRITICAL FIX)
-     ================================================= -->
-<script>
-(function () {
-  "use strict";
+  <!-- =================================================
+       🚀 BOOTSTRAP (USER GESTURE SAFE)
+       ================================================= -->
+  <script>
+    document.getElementById("startBtn").addEventListener("click", function () {
 
-  if (!window.STT) {
-    console.error("STT missing");
-    return;
-  }
-
-  // 🎤 STT → Anjali
-  STT.onResult = function (spokenText) {
-    if (!spokenText) return;
-
-    const text = spokenText.trim();
-
-    // A️⃣ नाम पहचान → Presence
-    if (text.startsWith("अंजली") || text.startsWith("anjali")) {
-      if (window.AnjaliPresence && AnjaliPresence.activate) {
-        AnjaliPresence.activate();
+      // 🔊 Audio unlock (mobile requirement)
+      if (window.TTS && TTS.init) {
+        TTS.init();
       }
-    }
 
-    // B️⃣ Reasoning / Answer flow
-    if (window.ReasoningEngine && ReasoningEngine.process) {
-      ReasoningEngine.process(text);
-    }
-  };
+      // 🧠 Core start
+      if (window.AnjaliCore && AnjaliCore.start) {
+        AnjaliCore.start();
+      }
 
-})();
-</script>
-
-<!-- =================================================
-     🚀 BOOTSTRAP (USER GESTURE SAFE)
-     ================================================= -->
-<script>
-document.getElementById("startBtn").addEventListener("click", function () {
-
-  // 🔊 Audio unlock (mobile requirement)
-  if (window.TTS && TTS.init) {
-    TTS.init();
-  }
-
-  // 🧠 Core start
-  if (window.AnjaliCore && AnjaliCore.start) {
-    AnjaliCore.start();
-  }
-
-  // 🎤 Start listening
-  if (window.STT && STT.start) {
-    STT.start();
-  }
-});
-</script>
+      // 🎤 Start listening
+      if (window.STT && STT.start) {
+        STT.start();
+      }
+    });
+  </script>
 
 </body>
-</html>आईपीओ
+</html>
