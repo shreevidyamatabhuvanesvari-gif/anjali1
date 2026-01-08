@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>अंजली</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #fafafa;
+      color: #222;
+    }
+    .container {
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .status {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #555;
+    }
+    button {
+      padding: 14px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 24px;
+      background: #e91e63;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>ए सुनो…</h1>
+
+  <button id="startBtn">
+    अंजली को बुलाइए
+  </button>
+
+  <div id="appStatus" class="status">
+    अंजली अभी शांत है।
+  </div>
+</div>
+
+<!-- ===============================
+     CORE (सबसे पहले)
+     =============================== -->
+<script src="core/AnjaliCore.js"></script>
+
+<!-- ===============================
+     VOICE SYSTEM
+     =============================== -->
+<script src="voice/tts.js"></script>
+<script src="voice/stt.js"></script>
+
+<!-- ===============================
+     KNOWLEDGE / MEMORY
+     =============================== -->
+<script src="learning/KnowledgeBase.js"></script>
+
+<!-- ===============================
+     THINKING / REASONING
+     =============================== -->
+<script src="reasoning/ReasoningEngine.js"></script>
+
+<!-- ===============================
+     RESPONSE (बोलने से पहले)
+     =============================== -->
+<script src="response/ResponseEngine.js"></script>
+
+<!-- ===============================
+     DIAGNOSTIC (सबसे अंत में)
+     =============================== -->
+<script src="diagnostics/anjali_real_diagnostic.js"></script>
+
+<script>
+/* ===============================
+   INDEX RUNTIME CONTROL
+   =============================== */
+
+let audioUnlocked = false;
+let conversationActive = false;
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  const status = document.getElementById("appStatus");
+
+  /* अंजली को सक्रिय करना */
+  if (window.AnjaliCore) {
+    AnjaliCore.start();
+  }
+
+  /* आवाज़ अनलॉक */
+  if (window.TTS && !audioUnlocked) {
+    try {
+      TTS.init();
+      audioUnlocked = true;
+    } catch {}
+  }
+
+  conversationActive = true;
+  status.textContent = "अंजली सुन रही है…";
+
+  /* STT शुरू */
+  if (window.STT) {
+    STT.start();
+  }
+
+  /* डायग्नोस्टिक को यहीं चलाना */
+  if (window.runAnjaliDiagnostic) {
+    setTimeout(() => {
+      window.runAnjaliDiagnostic();
+    }, 300);
+  }
+});
+</script>
+
+</body>
+</html>
