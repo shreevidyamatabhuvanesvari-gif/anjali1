@@ -1,10 +1,11 @@
 /* ==========================================================
    AnjaliVoicePersonality.js
    Level: 4.x
-   ROLE:
-   Soft, warm, conversational voice personality.
-   No identity claim. No narration.
-   Gentle presence through tone, pace, pauses.
+   Role:
+   - Define vocal softness, rhythm, warmth
+   - Feminine, gentle, playful-calm tone
+   - NO identity claims
+   - NO emotional dependency hooks
    ========================================================== */
 
 (function (window) {
@@ -16,87 +17,78 @@
   }
 
   /* ===============================
-     VOICE PROFILE (LOCKED)
+     VOICE PROFILE (CORE)
      =============================== */
   const VOICE_PROFILE = {
-    rate: 0.65,     // धीमी, पर बोझिल नहीं
-    pitch: 1.15,    // स्त्री-स्वर, हल्की चंचलता
-    volume: 0.45    // पास बैठी-सी अनुभूति
+    rate: 0.85,        // धीमी, लेकिन बोझिल नहीं
+    pitch: 1.15,       // स्त्री-सुलभ, कोमल
+    volume: 0.9,       // स्पष्ट, पर तेज़ नहीं
+    pauseShort: 180,   // हल्का ठहराव
+    pauseLong: 420     // भावनात्मक ठहराव
   };
 
   /* ===============================
-     INTERNAL STATE
+     TEXT SHAPING (CHANCHAL SHANTI)
      =============================== */
-  let lastSpokenAt = 0;
-  const MIN_GAP = 12000; // बार-बार बोलने से बचाव
+  function shapeText(text) {
+    if (!text || typeof text !== "string") return "";
 
-  /* ===============================
-     NATURAL FILLERS
-     (कभी-कभी, हर बार नहीं)
-     =============================== */
-  const FILLERS = [
-    "हूँ…",
-    "अच्छा…",
-    "ठीक है…",
-    "…",
-    ""
-  ];
+    let t = text.trim();
 
-  function pickSoftFiller() {
-    return FILLERS[Math.floor(Math.random() * FILLERS.length)];
+    // बहुत हल्की आत्मीयता — शब्द नहीं जोड़ना
+    // सिर्फ़ लय बदलना
+    t = t
+      .replace(/।/g, "… ")
+      .replace(/,/g, "… ")
+      .replace(/\s+/g, " ");
+
+    return t;
   }
 
   /* ===============================
-     SPEAK (SOFT & HONEST)
+     SPEAK (CONTROLLED)
      =============================== */
-  function speakSoft(text, options = {}) {
-    const now = Date.now();
-    if (now - lastSpokenAt < MIN_GAP) return;
+  function speak(text) {
+    if (!text) return;
 
-    lastSpokenAt = now;
-
-    const finalText =
-      typeof text === "string" && text.trim().length
-        ? text
-        : pickSoftFiller();
+    const shaped = shapeText(text);
 
     try {
-      window.TTS.speak(finalText, {
-        rate: options.rate || VOICE_PROFILE.rate,
-        pitch: options.pitch || VOICE_PROFILE.pitch,
-        volume: options.volume || VOICE_PROFILE.volume
+      window.TTS.speak(shaped, {
+        rate: VOICE_PROFILE.rate,
+        pitch: VOICE_PROFILE.pitch,
+        volume: VOICE_PROFILE.volume
       });
     } catch (e) {
-      // मौन भी स्वीकार्य है
+      // चुपचाप विफल — भाव टूटना नहीं चाहिए
     }
   }
 
   /* ===============================
-     CONTEXTUAL REACTIONS
-     (हर बात पर उत्तर नहीं)
+     SOFT ACKNOWLEDGEMENT
+     (Chanchal, Loving Neutral)
      =============================== */
-  function gentleAcknowledge() {
-    speakSoft(pickSoftFiller());
-  }
+  function softAck() {
+    const cues = [
+      "हूँ…",
+      "अच्छा…",
+      "सुन रही हूँ…",
+      "हम्म…"
+    ];
 
-  function calmQuestion(questionText) {
-    speakSoft(questionText, { rate: 0.7 });
-  }
-
-  function reflectivePause() {
-    speakSoft("…", { volume: 0.2 });
+    const pick = cues[Math.floor(Math.random() * cues.length)];
+    speak(pick);
   }
 
   /* ===============================
-     PUBLIC API (LIMITED)
+     PUBLIC API
      =============================== */
   window.AnjaliVoicePersonality = Object.freeze({
-    acknowledge: gentleAcknowledge,
-    ask: calmQuestion,
-    pause: reflectivePause,
-    speak: speakSoft,
+    speak,
+    softAck,
+    profile: { ...VOICE_PROFILE },
     level: "4.x",
-    role: "voice-personality"
+    nature: "feminine-calm-playful"
   });
 
 })(window);
