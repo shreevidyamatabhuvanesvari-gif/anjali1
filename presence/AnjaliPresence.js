@@ -1,137 +1,138 @@
 /* ==========================================================
    AnjaliPresence.js
-   Level-4 / Version-4.x
+   Level: 4.x
    ROLE:
-   Maintain emotional + conversational presence.
-   Decide WHEN to respond, HOW to respond, or
-   WHEN to simply stay present and listening.
-
-   IMPORTANT PHILOSOPHY:
-   - अंजली हर प्रश्न का उत्तर देती है
-   - पर हर वाक्य पर प्रतिक्रिया नहीं थोपती
-   - चुप रहना = अनुपस्थिति नहीं
+   Presence without claim.
+   पहचान → सूक्ष्म प्रतिक्रिया → सुनना शुरू।
+   कोई टेक्स्ट नहीं, कोई घोषणा नहीं।
    ========================================================== */
 
 (function (window) {
   "use strict";
 
+  if (!window.AnjaliCore || !window.STT) {
+    console.warn("AnjaliPresence: Core or STT missing");
+    return;
+  }
+
   /* ===============================
      INTERNAL STATE
      =============================== */
-  let active = false;
-  let lastHeardAt = 0;
-  let lastSpokenAt = 0;
-  let silenceTimer = null;
-
-  const SILENCE_CHECK_MS = 30 * 60 * 1000; // 30 मिनट
-  const MIN_GAP_BETWEEN_SPEECH = 8 * 1000; // 8 सेकंड
+  let listening = false;
+  let lastWakeAt = 0;
 
   /* ===============================
-     UTILITIES
+     CONFIG (LOCKED)
      =============================== */
-  function now() {
-    return Date.now();
-  }
-
-  function isCallingAnjali(text) {
-    if (!text) return false;
-    return /(^|\s)अंजली(\s|$)/i.test(text);
-  }
-
-  function isQuestion(text) {
-    return /[?？]|क्या|कैसे|क्यों|कब|कहाँ|बताओ|बताइए/i.test(text);
-  }
-
-  function canSpeak() {
-    return now() - lastSpokenAt > MIN_GAP_BETWEEN_SPEECH;
-  }
+  const WAKE_WORD = "अंजली";
+  const MIN_GAP = 8000; // ms (बार-बार trigger न हो)
 
   /* ===============================
-     CORE PRESENCE LOGIC
+     SOFT PRESENCE SOUNDS
+     (कोई शब्द नहीं, केवल अहसास)
      =============================== */
-  function observeInput(text) {
-    lastHeardAt = now();
+  function softPresenceCue() {
+    if (!window.TTS || typeof window.TTS.speak !== "function") return;
 
-    // अंजली नाम से पुकारे जाने पर सक्रिय
-    if (!active && isCallingAnjali(text)) {
-      active = true;
-      softlyAcknowledge();
-      return;
-    }
+    // 3 में से कोई एक — यादृच्छिक, मानव-सा
+    const cues = [
+      "हूँ",      // बहुत हल्का
+      "…",        // लगभग मौन
+      " "         // शून्य-सा (TTS trigger के लिए)
+    ];
 
-    if (!active) return;
+    const cue = cues[Math.floor(Math.random() * cues.length)];
 
-    // प्रश्न है → उत्तर का प्रयास अनिवार्य
-    if (isQuestion(text)) {
-      forwardForAnswer(text);
-      return;
-    }
-
-    // साधारण बात → सुनना भी उत्तर है
-    remainPresent();
-  }
-
-  /* ===============================
-     RESPONSE DECISIONS
-     =============================== */
-  function softlyAcknowledge() {
-    if (!window.TTS || !canSpeak()) return;
-
-    lastSpokenAt = now();
-    TTS.speak("ए सुनो…");
-  }
-
-  function forwardForAnswer(text) {
-    if (!window.KnowledgeAnswerEngine) return;
-
-    const result = KnowledgeAnswerEngine.retrieve(text);
-
-    if (result && result.content && window.ResponseEngine) {
-      lastSpokenAt = now();
-      ResponseEngine.onDecision({
-        text: result.content,
-        confidence: result.relevance || 0.6
+    try {
+      window.TTS.speak(cue, {
+        rate: 0.6,
+        pitch: 1.1,
+        volume: 0.3
       });
-      return;
+    } catch (e) {
+      // पूरी तरह silent fail
     }
-
-    // यदि उत्तर न मिले — तब भी अनुपस्थिति नहीं
-    if (window.TTS && canSpeak()) {
-      lastSpokenAt = now();
-      TTS.speak("थोड़ा सोचने दो… हम इस पर फिर बात करेंगे।");
-    }
-  }
-
-  function remainPresent() {
-    // जानबूझकर मौन
-    scheduleSilencePresence();
   }
 
   /* ===============================
-     SILENCE PRESENCE (30 min)
+     LISTENING MODE
      =============================== */
-  function scheduleSilencePresence() {
-    if (silenceTimer) return;
+  function enterListeningMode() {
+    if (listening) return;
 
-    silenceTimer = setTimeout(() => {
-      if (!active) return;
+    listening = true;
 
-      if (window.TTS) {
-        lastSpokenAt = now();
-        TTS.speak("मैं यहीं हूँ…");
-      }
-      silenceTimer = null;
-    }, SILENCE_CHECK_MS);
+    // सूक्ष्म उपस्थिति संकेत
+    softPresenceCue();
+
+    // वास्तविक सुनना
+    try {
+      window.STT.start({
+        continuous: true,
+        interimResults: true
+      });
+    } catch (e) {
+      listening = false;
+    }
   }
 
   /* ===============================
-     PUBLIC API
+     EXIT (अगर ज़रूरत हो)
+     =============================== */
+  function stopListening() {
+    if (!listening) return;
+    listening = false;
+    try {
+      window.STT.stop();
+    } catch (e) {}
+  }
+
+  /* ===============================
+     WAKE WORD DETECTION
+     =============================== */
+  function detectWakeWord(text) {
+    if (!text) return;
+
+    const now = Date.now();
+    if (now - lastWakeAt < MIN_GAP) return;
+
+    const normalized = String(text).toLowerCase();
+
+    if (normalized.includes(WAKE_WORD)) {
+      lastWakeAt = now;
+      enterListeningMode();
+    }
+  }
+
+  /* ===============================
+     STT HOOK
+     (speech → presence)
+     =============================== */
+  if (typeof window.STT.onResult === "function") {
+    window.STT.onResult(function (text) {
+      detectWakeWord(text);
+    });
+  } else {
+    // fallback: global hook
+    window.onAnjaliSpeech = function (text) {
+      detectWakeWord(text);
+    };
+  }
+
+  /* ===============================
+     CORE LIFECYCLE BIND
+     =============================== */
+  if (window.AnjaliCore && typeof window.AnjaliCore.on === "function") {
+    window.AnjaliCore.on("stop", stopListening);
+  }
+
+  /* ===============================
+     PUBLIC STATUS (DIAGNOSTIC ONLY)
      =============================== */
   window.AnjaliPresence = Object.freeze({
-    observeInput,
-    isActive: () => active,
+    isListening: () => listening,
     level: "4.x",
-    mode: "presence-companion"
+    role: "presence-only"
   });
 
 })(window);
