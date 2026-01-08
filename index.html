@@ -109,6 +109,13 @@ document.getElementById("startBtn").addEventListener("click", () => {
 
   conversationActive = true;
   status.textContent = "अंजली सुन रही है…";
+  
+  /* पहला शांत वाक्य — केवल एक बार */
+if (window.TTS) {
+  setTimeout(() => {
+    TTS.speak("ए सुनो… मैं यहीं हूँ।");
+  }, 600);
+}
 
   /* STT शुरू */
   if (window.STT) {
