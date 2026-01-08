@@ -1,98 +1,102 @@
 /* ==========================================================
    AnjaliVoicePersonality.js
-   Level-4 / Version-4.x
+   Level: 4.x
    ROLE:
-   Define HOW Anjali speaks:
-   - softness
-   - rhythm
-   - warmth
-   - gentle playfulness (चंचलता)
-   WITHOUT imitation, WITHOUT declaration.
-
-   CORE IDEA:
-   अंजली की चंचलता आवाज़ में नहीं,
-   विराम (pause) में है।
+   Soft, warm, conversational voice personality.
+   No identity claim. No narration.
+   Gentle presence through tone, pace, pauses.
    ========================================================== */
 
 (function (window) {
   "use strict";
 
-  /* ===============================
-     VOICE TRAITS (FIXED IDENTITY)
-     =============================== */
-  const VOICE_PROFILE = Object.freeze({
-    pitch: 1.05,          // हल्का स्त्री स्वर (नकली नहीं)
-    rate: 0.85,           // धीमी लेकिन बहती हुई
-    volume: 0.9,          // कोमल
-    pauseBefore: 300,     // बोलने से पहले ठहराव
-    pauseAfter: 400       // वाक्य के बाद ठहराव
-  });
-
-  /* ===============================
-     PLAYFUL SOFTENERS
-     =============================== */
-  const SOFT_PREFIXES = [
-    "ए सुनो… ",
-    "हूँ… ",
-    "थोड़ा रुक कर सुनो… ",
-    ""
-  ];
-
-  const SOFT_SUFFIXES = [
-    "",
-    " 🙂",
-    " …",
-    ""
-  ];
-
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+  if (!window.TTS) {
+    console.warn("AnjaliVoicePersonality: TTS missing");
+    return;
   }
 
   /* ===============================
-     MAIN SPEAK STYLE
+     VOICE PROFILE (LOCKED)
      =============================== */
-  function speak(text) {
-    if (!window.TTS || !text) return;
+  const VOICE_PROFILE = {
+    rate: 0.65,     // धीमी, पर बोझिल नहीं
+    pitch: 1.15,    // स्त्री-स्वर, हल्की चंचलता
+    volume: 0.45    // पास बैठी-सी अनुभूति
+  };
+
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
+  let lastSpokenAt = 0;
+  const MIN_GAP = 12000; // बार-बार बोलने से बचाव
+
+  /* ===============================
+     NATURAL FILLERS
+     (कभी-कभी, हर बार नहीं)
+     =============================== */
+  const FILLERS = [
+    "हूँ…",
+    "अच्छा…",
+    "ठीक है…",
+    "…",
+    ""
+  ];
+
+  function pickSoftFiller() {
+    return FILLERS[Math.floor(Math.random() * FILLERS.length)];
+  }
+
+  /* ===============================
+     SPEAK (SOFT & HONEST)
+     =============================== */
+  function speakSoft(text, options = {}) {
+    const now = Date.now();
+    if (now - lastSpokenAt < MIN_GAP) return;
+
+    lastSpokenAt = now;
 
     const finalText =
-      pick(SOFT_PREFIXES) +
-      text +
-      pick(SOFT_SUFFIXES);
+      typeof text === "string" && text.trim().length
+        ? text
+        : pickSoftFiller();
 
-    setTimeout(() => {
-      TTS.speak(finalText, {
-        pitch: VOICE_PROFILE.pitch,
-        rate: VOICE_PROFILE.rate,
-        volume: VOICE_PROFILE.volume
+    try {
+      window.TTS.speak(finalText, {
+        rate: options.rate || VOICE_PROFILE.rate,
+        pitch: options.pitch || VOICE_PROFILE.pitch,
+        volume: options.volume || VOICE_PROFILE.volume
       });
-    }, VOICE_PROFILE.pauseBefore);
+    } catch (e) {
+      // मौन भी स्वीकार्य है
+    }
   }
 
   /* ===============================
-     SILENT PLAYFUL PRESENCE
+     CONTEXTUAL REACTIONS
+     (हर बात पर उत्तर नहीं)
      =============================== */
-  function presenceOnly() {
-    if (!window.TTS) return;
+  function gentleAcknowledge() {
+    speakSoft(pickSoftFiller());
+  }
 
-    setTimeout(() => {
-      TTS.speak("हूँ…", {
-        pitch: VOICE_PROFILE.pitch,
-        rate: 0.7,
-        volume: 0.6
-      });
-    }, 500);
+  function calmQuestion(questionText) {
+    speakSoft(questionText, { rate: 0.7 });
+  }
+
+  function reflectivePause() {
+    speakSoft("…", { volume: 0.2 });
   }
 
   /* ===============================
-     PUBLIC API
+     PUBLIC API (LIMITED)
      =============================== */
   window.AnjaliVoicePersonality = Object.freeze({
-    speak,
-    presenceOnly,
-    traits: VOICE_PROFILE,
+    acknowledge: gentleAcknowledge,
+    ask: calmQuestion,
+    pause: reflectivePause,
+    speak: speakSoft,
     level: "4.x",
-    nature: "soft-playful-warm"
+    role: "voice-personality"
   });
 
 })(window);
