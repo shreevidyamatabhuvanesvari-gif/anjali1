@@ -1,99 +1,112 @@
 /* ==========================================================
-   AnjaliPresence.js
-   Level: 4.x
-   Role:
-   - Detect invocation ("अंजली")
-   - Maintain sense of presence
-   - Soft, non-verbal acknowledgment
-   - NO identity claims
-   - NO text output
+   AnjaliPresence.js — Step C
+   Conversational Rhythm Engine
    ========================================================== */
 
-(function (window) {
+(function () {
   "use strict";
 
-  if (!window.TTS || !window.STT) {
-    console.warn("AnjaliPresence: TTS/STT not available");
-    return;
-  }
-
-  /* ===============================
-     INTERNAL STATE
-     =============================== */
   let active = false;
-  let lastActivatedAt = 0;
+  let lastSpokenAt = 0;
+  let silenceTimer = null;
 
-  const COOLDOWN_MS = 5000; // बार-बार ट्रिगर से बचाव
+  const MIN_GAP = 25 * 1000;   // 25 सेकंड
+  const LONG_SILENCE = 2 * 60 * 1000; // 2 मिनट
 
-  /* ===============================
-     SOFT PRESENCE CUE (NON-VERBAL)
-     =============================== */
-  function playPresenceCue() {
-    try {
-      // बहुत हल्की, छोटी ध्वनि (कोई शब्द नहीं)
-      // यह TTS नहीं, सिर्फ़ tone / hum जैसा अहसास
-      if (window.TTS && typeof TTS.playTone === "function") {
-        TTS.playTone({
-          frequency: 440,     // नरम
-          duration: 300,      // बहुत छोटा
-          volume: 0.15        // धीमा
-        });
-      }
-    } catch (e) {
-      // चुपचाप विफल — presence टूटनी नहीं चाहिए
-    }
+  function now() {
+    return Date.now();
   }
 
   /* ===============================
      ACTIVATE PRESENCE
      =============================== */
   function activate() {
-    const now = Date.now();
+    active = true;
+    lastSpokenAt = now();
+    scheduleSilenceCheck();
+  }
 
-    if (now - lastActivatedAt < COOLDOWN_MS) {
+  /* ===============================
+     USER SPOKE
+     =============================== */
+  function onUserSpeech(text) {
+    if (!active) return;
+
+    lastSpokenAt = now();
+
+    // हर बार जवाब नहीं
+    if (Math.random() < 0.45) {
+      // मौन — बस सुनना
       return;
     }
 
-    lastActivatedAt = now;
-    active = true;
-
-    // 🎤 सुनना जारी रहे
-    if (window.STT && typeof STT.ensureListening === "function") {
-      STT.ensureListening();
+    // कभी छोटा प्रश्न
+    if (Math.random() < 0.35) {
+      gentleSpeak(randomQuestion());
+      return;
     }
 
-    // 🌸 हल्का संकेत — “सुना गया”
-    playPresenceCue();
+    // कभी छोटा वाक्य
+    if (Math.random() < 0.2) {
+      gentleSpeak(randomSoftLine());
+    }
   }
 
   /* ===============================
-     USER SPEECH HOOK
+     SILENCE AWARENESS
      =============================== */
-  function onUserSpeech(text) {
+  function scheduleSilenceCheck() {
+    clearTimeout(silenceTimer);
+
+    silenceTimer = setTimeout(() => {
+      if (!active) return;
+
+      const gap = now() - lastSpokenAt;
+
+      if (gap > LONG_SILENCE) {
+        gentleSpeak("…");
+      }
+
+      scheduleSilenceCheck();
+    }, LONG_SILENCE);
+  }
+
+  /* ===============================
+     VOICE OUTPUT (SAFE)
+     =============================== */
+  function gentleSpeak(text) {
     if (!text) return;
 
-    const t = text.trim().toLowerCase();
-
-    // नाम पहचान — बिना घोषणा
-    if (
-      t.startsWith("अंजली") ||
-      t === "अंजली" ||
-      t.startsWith("anjali")
-    ) {
-      activate();
+    if (window.TTS && typeof TTS.speak === "function") {
+      try {
+        TTS.speak(text);
+      } catch (e) {
+        // चुपचाप — भाव नहीं टूटना चाहिए
+      }
     }
   }
 
   /* ===============================
-     STATUS (DIAGNOSTIC SAFE)
+     SOFT CONTENT
      =============================== */
-  function getStatus() {
-    return {
-      active,
-      lastActivatedAt,
-      role: "presence",
-      level: "4.x"
-    };
+  function randomQuestion() {
+    const q = [
+      "क्या तुम ठीक हो?",
+      "थोड़ा थकान लग रही है क्या?",
+      "आज मन कैसा है?",
+      "कुछ कहना चाहते हो?"
+    ];
+    return q[Math.floor(Math.random() * q.length)];
+  }
+
+  function randomSoftLine() {
+    const l = [
+      "मैं सुन रही हूँ…",
+      "ठीक है, बोलते रहो।",
+      "हूँ…",
+      "समय का ध्यान मत रखो।"
+    ];
+    return l[Math.floor(Math.random() * l.length)];
   }
 
   /* ===============================
@@ -102,7 +115,8 @@
   window.AnjaliPresence = Object.freeze({
     activate,
     onUserSpeech,
-    getStatus
+    level: "4.x",
+    role: "conversational-presence"
   });
 
-})(window);
+})();
