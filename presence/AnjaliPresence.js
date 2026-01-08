@@ -1,138 +1,108 @@
 /* ==========================================================
    AnjaliPresence.js
    Level: 4.x
-   ROLE:
-   Presence without claim.
-   पहचान → सूक्ष्म प्रतिक्रिया → सुनना शुरू।
-   कोई टेक्स्ट नहीं, कोई घोषणा नहीं।
+   Role:
+   - Detect invocation ("अंजली")
+   - Maintain sense of presence
+   - Soft, non-verbal acknowledgment
+   - NO identity claims
+   - NO text output
    ========================================================== */
 
 (function (window) {
   "use strict";
 
-  if (!window.AnjaliCore || !window.STT) {
-    console.warn("AnjaliPresence: Core or STT missing");
+  if (!window.TTS || !window.STT) {
+    console.warn("AnjaliPresence: TTS/STT not available");
     return;
   }
 
   /* ===============================
      INTERNAL STATE
      =============================== */
-  let listening = false;
-  let lastWakeAt = 0;
+  let active = false;
+  let lastActivatedAt = 0;
+
+  const COOLDOWN_MS = 5000; // बार-बार ट्रिगर से बचाव
 
   /* ===============================
-     CONFIG (LOCKED)
+     SOFT PRESENCE CUE (NON-VERBAL)
      =============================== */
-  const WAKE_WORD = "अंजली";
-  const MIN_GAP = 8000; // ms (बार-बार trigger न हो)
-
-  /* ===============================
-     SOFT PRESENCE SOUNDS
-     (कोई शब्द नहीं, केवल अहसास)
-     =============================== */
-  function softPresenceCue() {
-    if (!window.TTS || typeof window.TTS.speak !== "function") return;
-
-    // 3 में से कोई एक — यादृच्छिक, मानव-सा
-    const cues = [
-      "हूँ",      // बहुत हल्का
-      "…",        // लगभग मौन
-      " "         // शून्य-सा (TTS trigger के लिए)
-    ];
-
-    const cue = cues[Math.floor(Math.random() * cues.length)];
-
+  function playPresenceCue() {
     try {
-      window.TTS.speak(cue, {
-        rate: 0.6,
-        pitch: 1.1,
-        volume: 0.3
-      });
+      // बहुत हल्की, छोटी ध्वनि (कोई शब्द नहीं)
+      // यह TTS नहीं, सिर्फ़ tone / hum जैसा अहसास
+      if (window.TTS && typeof TTS.playTone === "function") {
+        TTS.playTone({
+          frequency: 440,     // नरम
+          duration: 300,      // बहुत छोटा
+          volume: 0.15        // धीमा
+        });
+      }
     } catch (e) {
-      // पूरी तरह silent fail
+      // चुपचाप विफल — presence टूटनी नहीं चाहिए
     }
   }
 
   /* ===============================
-     LISTENING MODE
+     ACTIVATE PRESENCE
      =============================== */
-  function enterListeningMode() {
-    if (listening) return;
+  function activate() {
+    const now = Date.now();
 
-    listening = true;
-
-    // सूक्ष्म उपस्थिति संकेत
-    softPresenceCue();
-
-    // वास्तविक सुनना
-    try {
-      window.STT.start({
-        continuous: true,
-        interimResults: true
-      });
-    } catch (e) {
-      listening = false;
+    if (now - lastActivatedAt < COOLDOWN_MS) {
+      return;
     }
+
+    lastActivatedAt = now;
+    active = true;
+
+    // 🎤 सुनना जारी रहे
+    if (window.STT && typeof STT.ensureListening === "function") {
+      STT.ensureListening();
+    }
+
+    // 🌸 हल्का संकेत — “सुना गया”
+    playPresenceCue();
   }
 
   /* ===============================
-     EXIT (अगर ज़रूरत हो)
+     USER SPEECH HOOK
      =============================== */
-  function stopListening() {
-    if (!listening) return;
-    listening = false;
-    try {
-      window.STT.stop();
-    } catch (e) {}
-  }
-
-  /* ===============================
-     WAKE WORD DETECTION
-     =============================== */
-  function detectWakeWord(text) {
+  function onUserSpeech(text) {
     if (!text) return;
 
-    const now = Date.now();
-    if (now - lastWakeAt < MIN_GAP) return;
+    const t = text.trim().toLowerCase();
 
-    const normalized = String(text).toLowerCase();
-
-    if (normalized.includes(WAKE_WORD)) {
-      lastWakeAt = now;
-      enterListeningMode();
+    // नाम पहचान — बिना घोषणा
+    if (
+      t.startsWith("अंजली") ||
+      t === "अंजली" ||
+      t.startsWith("anjali")
+    ) {
+      activate();
     }
   }
 
   /* ===============================
-     STT HOOK
-     (speech → presence)
+     STATUS (DIAGNOSTIC SAFE)
      =============================== */
-  if (typeof window.STT.onResult === "function") {
-    window.STT.onResult(function (text) {
-      detectWakeWord(text);
-    });
-  } else {
-    // fallback: global hook
-    window.onAnjaliSpeech = function (text) {
-      detectWakeWord(text);
+  function getStatus() {
+    return {
+      active,
+      lastActivatedAt,
+      role: "presence",
+      level: "4.x"
     };
   }
 
   /* ===============================
-     CORE LIFECYCLE BIND
-     =============================== */
-  if (window.AnjaliCore && typeof window.AnjaliCore.on === "function") {
-    window.AnjaliCore.on("stop", stopListening);
-  }
-
-  /* ===============================
-     PUBLIC STATUS (DIAGNOSTIC ONLY)
+     GLOBAL EXPOSE
      =============================== */
   window.AnjaliPresence = Object.freeze({
-    isListening: () => listening,
-    level: "4.x",
-    role: "presence-only"
+    activate,
+    onUserSpeech,
+    getStatus
   });
 
 })(window);
