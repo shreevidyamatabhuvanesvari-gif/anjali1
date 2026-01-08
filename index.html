@@ -5,194 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>अंजली</title>
 
-  <!-- ===== STYLE : शांत, स्त्री-सुलभ ===== -->
   <style>
-    :root{
-      --bg1:#fff4ee;
-      --bg2:#ffe5d8;
-      --accent:#7a2e2e;
-      --soft:#b45c5c;
-      --card:#ffffff;
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #fff7f0, #fdebe0);
+      font-family: "Noto Serif Devanagari", serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    *{box-sizing:border-box}
-
-    body{
-      margin:0;
-      min-height:100vh;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", Arial, sans-serif;
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    .anjali-container {
+      text-align: center;
+      max-width: 360px;
+      padding: 20px;
     }
 
-    .card{
-      width:92%;
-      max-width:420px;
-      background:var(--card);
-      border-radius:22px;
-      padding:22px 18px 26px;
-      box-shadow:0 14px 30px rgba(0,0,0,.12);
-      text-align:center;
+    .avatar {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      margin-bottom: 18px;
     }
 
-    .avatar{
-      width:110px;
-      height:110px;
-      margin:6px auto 12px;
-      border-radius:50%;
-      overflow:hidden;
-      border:3px solid #f1c7c7;
-      box-shadow:0 6px 14px rgba(0,0,0,.15);
-    }
-    .avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
+    .title {
+      font-size: 22px;
+      color: #5a2d2d;
+      margin-bottom: 6px;
     }
 
-    .title{
-      font-size:26px;
-      color:var(--accent);
-      margin:6px 0 2px;
+    .subtitle {
+      font-size: 14px;
+      color: #7a4a4a;
+      margin-bottom: 24px;
     }
 
-    .subtitle{
-      font-size:14px;
-      color:#555;
-      margin-bottom:14px;
+    .listen-btn {
+      background: #d86c6c;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 14px 28px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 
-    .status{
-      background:#fff7f4;
-      border:1px solid #f3d4c7;
-      border-radius:14px;
-      padding:12px;
-      font-size:14px;
-      color:#6b2c2c;
-      margin:12px 0;
-      min-height:42px;
+    .listen-btn:active {
+      transform: scale(0.96);
     }
 
-    .actions{
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:6px;
-    }
-
-    .btn{
-      border:none;
-      border-radius:16px;
-      padding:12px 18px;
-      font-size:14px;
-      cursor:pointer;
-      background:linear-gradient(180deg,#c96a6a,#a13f3f);
-      color:#fff;
-    }
-
-    .btn.secondary{
-      background:#fff;
-      color:var(--soft);
-      border:1px dashed #e6b2b2;
-    }
-
-    .footer{
-      margin-top:16px;
-      font-size:11px;
-      color:#777;
-      text-align:center;
+    .hint {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #6b4a4a;
     }
   </style>
 </head>
 
 <body>
 
-<main class="card">
+  <div class="anjali-container">
+    <!-- 🌸 AVATAR -->
+    <img
+      src="assets/anjali_avatar.jpg"
+      alt="Anjali"
+      class="avatar"
+    />
 
-  <!-- 🌸 AVATAR (प्रतीकात्मक) -->
-  <div class="avatar">
-    <!-- आप चाहें तो अपनी पसंद की फोटो रख सकते हैं -->
-    <img src="avatar.png" alt="Anjali Presence">
+    <!-- 🌸 NAME (बिना घोषणा) -->
+    <div class="title">अंजली</div>
+    <div class="subtitle">…यहीं हूँ</div>
+
+    <!-- 🎤 LISTEN -->
+    <button class="listen-btn" id="startBtn">
+      ए सुनो…
+    </button>
+
+    <div class="hint">
+      बोलिए।<br/>
+      जवाब मिले या न मिले — अंजली सुन रही है।
+    </div>
   </div>
 
-  <div class="title">अंजली</div>
-  <div class="subtitle">शांत • स्नेहपूर्ण • साथ बैठने वाली</div>
+  <!-- =================================================
+       SCRIPTS — ORDER LOCKED (भविष्य-सुरक्षित)
+       ================================================= -->
 
-  <!-- STATUS -->
-  <div class="status" id="appStatus">
-    ए सुनो…
-  </div>
+  <!-- CORE -->
+  <script src="core/AnjaliCore.js"></script>
 
-  <!-- ACTIONS -->
-  <div class="actions">
-    <button class="btn" id="startBtn">साथ बैठें</button>
-    <button class="btn secondary" id="stopBtn">थोड़ी देर बाद</button>
-  </div>
+  <!-- VOICE -->
+  <script src="voice/tts.js"></script>
+  <script src="voice/stt.js"></script>
 
-  <div class="footer">
-    यह एप उत्तर देने से पहले<br/>
-    साथ बैठना जानता है
-  </div>
+  <!-- KNOWLEDGE + MEMORY -->
+  <script src="learning/KnowledgeBase.js"></script>
+  <script src="learning/ExperienceMemory.js"></script>
+  <script src="core/ContextMemory.js"></script>
 
-</main>
+  <!-- ANSWER + REASONING -->
+  <script src="answer/KnowledgeAnswerEngine.js"></script>
+  <script src="reasoning/ReasoningEngine.js"></script>
 
-<!-- =================================================
-     SCRIPTS — ORDER LOCKED (भविष्य-सुरक्षित)
-     ================================================= -->
+  <!-- RESPONSE -->
+  <script src="response/ResponseEngine.js"></script>
 
-<!-- CORE -->
-<script src="core/AnjaliCore.js"></script>
+  <!-- 🌸 PRESENCE (A) -->
+  <script src="presence/AnjaliPresence.js"></script>
 
-<!-- VOICE -->
-<script src="voice/tts.js"></script>
-<script src="voice/stt.js"></script>
+  <!-- DIAGNOSTIC (LAST) -->
+  <script src="diagnostics/anjali_real_diagnostic.js"></script>
+  <script src="diagnostics/anjali_diagnostic_spec.js"></script>
+  <script src="diagnostics/anjali_diagnostic_weights.js"></script>
+  <script src="diagnostics/anjali_diagnostic_score.js"></script>
 
-<!-- KNOWLEDGE + MEMORY -->
-<script src="learning/KnowledgeBase.js"></script>
-<script src="learning/ExperienceMemory.js"></script>
-<script src="core/ContextMemory.js"></script>
+  <!-- =================================================
+       BOOTSTRAP (बहुत सरल, बहुत सच्चा)
+       ================================================= -->
+  <script>
+    document.getElementById("startBtn").addEventListener("click", function () {
+      if (window.STT && STT.start) {
+        STT.start(function (text) {
+          if (window.AnjaliPresence) {
+            AnjaliPresence.onUserSpeech(text);
+          }
+        });
+      }
+    });
 
-<!-- ANSWER + REASONING -->
-<script src="answer/KnowledgeAnswerEngine.js"></script>
-<script src="reasoning/ReasoningEngine.js"></script>
-
-<!-- RESPONSE -->
-<script src="response/ResponseEngine.js"></script>
-
-<!-- 🌸 PRESENCE (A) -->
-<script src="presence/AnjaliPresence.js"></script>
-
-<!-- DIAGNOSTIC (LAST) -->
-<script src="diagnostics/anjali_real_diagnostic.js"></script>
-<script src="diagnostics/anjali_diagnostic_spec.js"></script>
-<script src="diagnostics/anjali_diagnostic_weights.js"></script>
-<script src="diagnostics/anjali_diagnostic_score.js"></script>
-
-<!-- =================================================
-     STABLE BINDINGS (NO FUTURE CHANGE NEEDED)
-     ================================================= -->
-<script>
-  const statusBox = document.getElementById("appStatus");
-
-  function startConversation(){
-    if (window.AnjaliCore) AnjaliCore.start();
-    if (window.STT) STT.start();
-    if (window.AnjaliPresence) AnjaliPresence.start();
-
-    statusBox.textContent = "ए सुनो… मैं यहीं हूँ।";
-  }
-
-  function stopConversation(){
-    if (window.AnjaliPresence) AnjaliPresence.stop();
-    statusBox.textContent = "ठीक है… थोड़ी देर बाद।";
-  }
-
-  document.getElementById("startBtn").onclick = startConversation;
-  document.getElementById("stopBtn").onclick = stopConversation;
-</script>
+    if (window.AnjaliCore) {
+      AnjaliCore.start();
+    }
+  </script>
 
 </body>
 </html>
