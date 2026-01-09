@@ -1,116 +1,163 @@
 /* ==========================================================
-   ResponseEngine — Level-4 / Version-4.x
-   Voice Personality (B) + Conversational Rhythm (C)
+   ResponseEngine.js
+   Level-4 / Version-4.x
+   ROLE:
+   Transform reasoning output into living conversation.
+   Applies:
+   B️⃣ Voice Personality (soft, playful, calm)
+   C️⃣ Conversational Rhythm (not always answering)
    ========================================================== */
 
-(function () {
+(function (window) {
   "use strict";
 
-  let speaking = false;
-  let lastMode = null;
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
+  let lastSpokenAt = 0;
+  let conversationEnergy = 0.5; // 0 = quiet, 1 = very engaged
+
+  const MIN_SPEAK_GAP = 7000; // 7 seconds (prevents machine-gun replies)
+
+  /* ===============================
+     TIME
+     =============================== */
+  function now() {
+    return Date.now();
+  }
 
   /* ===============================
      VOICE PERSONALITY (B)
+     ===============================
+     Soft | Warm | Lightly playful
      =============================== */
-  const VOICE_PROFILE = {
-    rate: 0.85,        // धीमी, सहज
-    pitch: 1.05,       // हल्की चंचलता
-    volume: 0.9,       // कोमल
-    pauseBefore: 400,  // बोलने से पहले ठहराव
-    pauseAfter: 300    // वाक्य के बाद ठहराव
-  };
+  function speakSoftly(text) {
+    if (!window.TTS || typeof window.TTS.speak !== "function") return;
 
-  /* ===============================
-     RESPONSE MODES (C)
-     =============================== */
-  const MODES = [
-    "direct-answer",
-    "answer-with-question",
-    "emotional-response",
-    "gentle-presence"
-  ];
-
-  function pickMode() {
-    let mode;
-    do {
-      mode = MODES[Math.floor(Math.random() * MODES.length)];
-    } while (mode === lastMode);
-    lastMode = mode;
-    return mode;
+    try {
+      window.TTS.speak(text, {
+        rate: 0.88,        // धीमी गति
+        pitch: 1.05,       // हल्की स्त्री चंचलता
+        volume: 0.75       // शांत, भारी नहीं
+      });
+    } catch (e) {
+      // चुपचाप विफल — भाव टूटना नहीं चाहिए
+    }
   }
 
   /* ===============================
-     SPEAK WITH PERSONALITY
+     RHYTHM DECISION (C)
+     ===============================
+     Decide HOW to respond, not always WHAT
      =============================== */
-  function speak(text) {
-    if (!text || speaking) return;
-    if (!window.TTS || !TTS.speak) return;
+  function decideResponseMode(reasoningResult) {
+    const t = now();
 
-    speaking = true;
-
-    setTimeout(() => {
-      try {
-        TTS.speak(text, {
-          rate: VOICE_PROFILE.rate,
-          pitch: VOICE_PROFILE.pitch,
-          volume: VOICE_PROFILE.volume,
-          onEnd: () => {
-            setTimeout(() => {
-              speaking = false;
-            }, VOICE_PROFILE.pauseAfter);
-          }
-        });
-      } catch {
-        speaking = false;
-      }
-    }, VOICE_PROFILE.pauseBefore);
-  }
-
-  /* ===============================
-     MAIN ENTRY (Reasoning → Response)
-     =============================== */
-  function onDecision(decision) {
-    if (!decision || !decision.text) return;
-
-    const mode = pickMode();
-    let finalText = decision.text;
-
-    switch (mode) {
-
-      case "direct-answer":
-        // जैसा है वैसा
-        break;
-
-      case "answer-with-question":
-        finalText =
-          decision.text +
-          "… ऐसा क्यों सोच रहे हो?";
-        break;
-
-      case "emotional-response":
-        finalText =
-          "आज तुम कुछ अलग से महसूस कर रहे हो… " +
-          decision.text;
-        break;
-
-      case "gentle-presence":
-        finalText =
-          "हम्म… " +
-          decision.text;
-        break;
+    // बहुत जल्दी-जल्दी नहीं बोलना
+    if (t - lastSpokenAt < MIN_SPEAK_GAP) {
+      return "presence"; // केवल साथ
     }
 
-    speak(finalText);
+    // कम confidence → सवाल
+    if (reasoningResult && reasoningResult.confidence < 0.45) {
+      return "reflective-question";
+    }
+
+    // मध्यम confidence → हल्का उत्तर
+    if (reasoningResult && reasoningResult.confidence < 0.75) {
+      return "gentle-answer";
+    }
+
+    // उच्च confidence → उत्तर + संवाद
+    return "answer-plus";
+  }
+
+  /* ===============================
+     RESPONSE FORMS
+     =============================== */
+
+  function gentleAnswer(text) {
+    speakSoftly(text);
+  }
+
+  function reflectiveQuestion(text) {
+    const prompts = [
+      "तुम ऐसा क्यों महसूस कर रहे हो?",
+      "क्या यह बात तुम्हें भीतर से छू रही है?",
+      "क्या हम इसे थोड़ा और सोचें?"
+    ];
+
+    const q = prompts[Math.floor(Math.random() * prompts.length)];
+    speakSoftly(q);
+  }
+
+  function answerPlus(text) {
+    speakSoftly(text);
+
+    // कभी-कभी छोटा संवाद जोड़ना
+    if (Math.random() < 0.4) {
+      setTimeout(() => {
+        speakSoftly("…और तुम क्या सोचते हो?");
+      }, 2200);
+    }
+  }
+
+  function silentPresence() {
+    // जानबूझकर कुछ नहीं कहना
+    // PresenceEngine अपना काम कर चुका होगा
+  }
+
+  /* ===============================
+     MAIN ENTRY
+     =============================== */
+  function respond(reasoningResult) {
+    if (!reasoningResult) return;
+
+    const mode = decideResponseMode(reasoningResult);
+    lastSpokenAt = now();
+
+    switch (mode) {
+      case "gentle-answer":
+        gentleAnswer(reasoningResult.text);
+        break;
+
+      case "reflective-question":
+        reflectiveQuestion(reasoningResult.text);
+        break;
+
+      case "answer-plus":
+        answerPlus(reasoningResult.text);
+        break;
+
+      case "presence":
+      default:
+        silentPresence();
+        break;
+    }
+  }
+
+  /* ===============================
+     STATUS (DIAGNOSTIC)
+     =============================== */
+  function getStatus() {
+    return {
+      lastSpokenAt,
+      energy: conversationEnergy,
+      role: "response-engine",
+      level: "4.x",
+      personality: "soft-playful-calm",
+      rhythm: "human-like"
+    };
   }
 
   /* ===============================
      GLOBAL EXPOSE
      =============================== */
   window.ResponseEngine = Object.freeze({
-    onDecision,
+    respond,
+    getStatus,
     level: "4.x",
-    voice: "soft-playful",
-    mode: "conversational-rhythm"
+    mode: "conversational"
   });
 
-})();
+})(window);
