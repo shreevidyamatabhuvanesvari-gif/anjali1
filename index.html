@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>अंजली</title>
 
-  <!-- 🌸 GOOGLE FONT -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
@@ -39,7 +38,6 @@
       font-size: 24px;
       color: #5a2d2d;
       margin-bottom: 6px;
-      letter-spacing: 1px;
     }
 
     .subtitle {
@@ -65,11 +63,6 @@
       font-size: 16px;
       cursor: pointer;
       box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-      transition: transform 0.15s ease;
-    }
-
-    .listen-btn:active {
-      transform: scale(0.96);
     }
 
     .hint {
@@ -82,81 +75,54 @@
 
 <body>
 
-  <div class="anjali-container">
+<div class="anjali-container">
 
-    <img src="assets/anjali_avatar.jpg" alt="Anjali" class="avatar"/>
+  <img src="assets/anjali_avatar.jpg" alt="Anjali" class="avatar"/>
 
-    <div class="title">अंजली</div>
-    <div class="subtitle">…यहीं है</div>
+  <div class="title">अंजली</div>
+  <div class="subtitle">…यहीं है</div>
 
-    <div class="shayari">
-      जो फूल यहां पर खिल न सके, ओ फूल वहां खिल जायेगें।<br/>
-      हम इस दुनियाँ में मिल न सके, उस दुनियाँ में मिल जायेगें।।
-    </div>
-
-    <button class="listen-btn" id="startBtn">
-      ए सुनो…
-    </button>
-
-    <div class="hint">
-      बोलिए…<br/>
-      अंजली सुन रही है।
-    </div>
-
+  <div class="shayari">
+    जो फूल यहां पर खिल न सके, ओ फूल वहां खिल जायेगें।<br/>
+    हम इस दुनियाँ में मिल न सके, उस दुनियाँ में मिल जायेगें।।
   </div>
 
-  <!-- ==============================
-       SCRIPTS — ORDER LOCKED
-       ============================== -->
+  <button class="listen-btn" id="startBtn">ए सुनो…</button>
 
-  <!-- CORE -->
-  <script src="core/AnjaliCore.js"></script>
+  <div class="hint">बोलिए…<br/>अंजली सुन रही है।</div>
 
-  <!-- VOICE -->
-  <script src="voice/tts.js"></script>
-  <script src="voice/stt.js"></script>
-  <script src="voice/STT_LongListening.js"></script>
+</div>
 
-  <!-- KNOWLEDGE + MEMORY -->
-  <script src="learning/KnowledgeBase.js"></script>
-  <script src="learning/ExperienceMemory.js"></script>
-  <script src="core/ContextMemory.js"></script>
+<!-- SCRIPTS -->
+<script src="core/AnjaliCore.js"></script>
+<script src="voice/tts.js"></script>
+<script src="voice/stt.js"></script>
+<script src="voice/STT_LongListening.js"></script>
+<script src="learning/KnowledgeBase.js"></script>
+<script src="learning/ExperienceMemory.js"></script>
+<script src="core/ContextMemory.js"></script>
+<script src="answer/KnowledgeAnswerEngine.js"></script>
+<script src="reasoning/ReasoningEngine.js"></script>
+<script src="response/ResponseEngine.js"></script>
+<script src="presence/AnjaliPresence.js"></script>
+<script src="diagnostics/anjali_real_diagnostic.js"></script>
+<script src="diagnostics/anjali_diagnostic_spec.js"></script>
+<script src="diagnostics/anjali_diagnostic_weights.js"></script>
+<script src="diagnostics/anjali_diagnostic_score.js"></script>
 
-  <!-- ANSWER + REASONING -->
-  <script src="answer/KnowledgeAnswerEngine.js"></script>
-  <script src="reasoning/ReasoningEngine.js"></script>
+<!-- BOOTSTRAP -->
+<script>
+document.getElementById("startBtn").addEventListener("click", function () {
 
-  <!-- RESPONSE -->
-  <script src="response/ResponseEngine.js"></script>
+  if (window.TTS && TTS.init) TTS.init();
+  if (window.AnjaliCore && AnjaliCore.start) AnjaliCore.start();
 
-  <!-- 🌸 PRESENCE -->
-  <script src="presence/AnjaliPresence.js"></script>
-
-  <!-- DIAGNOSTICS -->
-  <script src="diagnostics/anjali_real_diagnostic.js"></script>
-  <script src="diagnostics/anjali_diagnostic_spec.js"></script>
-  <script src="diagnostics/anjali_diagnostic_weights.js"></script>
-  <script src="diagnostics/anjali_diagnostic_score.js"></script>
-
- document.getElementById("startBtn").addEventListener("click", function () {
-
-  // 🔊 Audio unlock
-  if (window.TTS && TTS.init) {
-    TTS.init();
-  }
-
-  // 🧠 Core
-  if (window.AnjaliCore && AnjaliCore.start) {
-    AnjaliCore.start();
-  }
-
-  // 🎤 One and only mic start (long listening)
   if (window.STT_LongListening) {
     STT_LongListening.start();
   }
 
 });
-  </script>
+</script>
 
 </body>
 </html>
