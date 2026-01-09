@@ -1,54 +1,130 @@
 /* ==========================================================
    STT_LongListening.js
-   Purpose:
-   Keep microphone alive after user grants permission.
-   Mobile safe, Chrome safe.
+   Level-4 / Version-4.x
+   ROLE:
+   True continuous, human-like listening for Anjali.
+   Works with event-based STT (onResult / onEnd / onError)
    ========================================================== */
 
 (function (window) {
   "use strict";
 
   if (!window.STT) {
-    console.error("STT_LongListening: STT missing");
+    console.error("STT_LongListening: base STT missing");
     return;
   }
 
-  let active = false;
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
+  let enabled = false;
+  let listening = false;
+  let lastHeardAt = 0;
 
-  function start() {
-    if (active) return;
-    active = true;
+  const SILENCE_TIMEOUT = 12000; // 12 seconds
+  const RESTART_DELAY = 900;    // ms
 
-    // First real user-gesture start already done
-    loop();
+  function now() {
+    return Date.now();
   }
 
-  function loop() {
-    if (!active) return;
+  /* ===============================
+     ATTACH STT EVENTS
+     =============================== */
+  function attachSTT() {
+    STT.onResult = function (text) {
+      lastHeardAt = now();
+      if (!text) return;
+
+      // 🌸 Presence
+      if (window.AnjaliPresence) {
+        AnjaliPresence.onUserSpeech(text);
+      }
+
+      // 🧠 Reasoning
+      if (window.ReasoningEngine && ReasoningEngine.process) {
+        ReasoningEngine.process(text);
+      }
+    };
+
+    STT.onEnd = function () {
+      listening = false;
+      if (!enabled) return;
+
+      // auto restart
+      setTimeout(startListening, RESTART_DELAY);
+    };
+
+    STT.onError = function () {
+      listening = false;
+      if (!enabled) return;
+
+      setTimeout(startListening, RESTART_DELAY + 500);
+    };
+  }
+
+  /* ===============================
+     SAFE START
+     =============================== */
+  function startListening() {
+    if (!enabled || listening) return;
 
     try {
-      STT.start(function (text) {
-        if (text && window.STT.onResult) {
-          STT.onResult(text);
-        }
-
-        // restart after each phrase
-        setTimeout(loop, 400);
-      });
+      attachSTT();
+      listening = true;
+      STT.start();
     } catch (e) {
-      // try again after delay
-      setTimeout(loop, 1000);
+      listening = false;
     }
   }
 
-  function stop() {
-    active = false;
-    if (STT.stop) STT.stop();
+  /* ===============================
+     STOP
+     =============================== */
+  function stopListening() {
+    enabled = false;
+    listening = false;
+    try {
+      if (STT.stop) STT.stop();
+    } catch {}
   }
 
-  window.STT_LongListening = {
-    start,
-    stop
-  };
+  /* ===============================
+     SILENCE MONITOR
+     =============================== */
+  setInterval(function () {
+    if (!enabled || !listening) return;
+
+    if (now() - lastHeardAt > SILENCE_TIMEOUT) {
+      try {
+        if (STT.stop) STT.stop();
+      } catch {}
+    }
+  }, 3000);
+
+  /* ===============================
+     PUBLIC API
+     =============================== */
+  window.STT_LongListening = Object.freeze({
+    start() {
+      enabled = true;
+      lastHeardAt = now();
+      startListening();
+    },
+
+    stop() {
+      stopListening();
+    },
+
+    status() {
+      return {
+        enabled,
+        listening,
+        lastHeardAt,
+        role: "long-listening",
+        level: "4.x"
+      };
+    }
+  });
 
 })(window);
