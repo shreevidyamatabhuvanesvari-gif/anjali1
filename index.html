@@ -84,11 +84,7 @@
 
   <div class="anjali-container">
 
-    <img
-      src="assets/anjali_avatar.jpg"
-      alt="Anjali"
-      class="avatar"
-    />
+    <img src="assets/anjali_avatar.jpg" alt="Anjali" class="avatar"/>
 
     <div class="title">अंजली</div>
     <div class="subtitle">…यहीं है</div>
@@ -109,9 +105,9 @@
 
   </div>
 
-  <!-- =================================================
-       SCRIPTS — ORDER LOCKED (भविष्य-सुरक्षित)
-       ================================================= -->
+  <!-- ==============================
+       SCRIPTS — ORDER LOCKED
+       ============================== -->
 
   <!-- CORE -->
   <script src="core/AnjaliCore.js"></script>
@@ -119,7 +115,6 @@
   <!-- VOICE -->
   <script src="voice/tts.js"></script>
   <script src="voice/stt.js"></script>
-  <!-- ✅ LONG LISTENING LAYER -->
   <script src="voice/STT_LongListening.js"></script>
 
   <!-- KNOWLEDGE + MEMORY -->
@@ -137,32 +132,38 @@
   <!-- 🌸 PRESENCE -->
   <script src="presence/AnjaliPresence.js"></script>
 
-  <!-- DIAGNOSTICS (LAST) -->
+  <!-- DIAGNOSTICS -->
   <script src="diagnostics/anjali_real_diagnostic.js"></script>
   <script src="diagnostics/anjali_diagnostic_spec.js"></script>
   <script src="diagnostics/anjali_diagnostic_weights.js"></script>
   <script src="diagnostics/anjali_diagnostic_score.js"></script>
 
-  <!-- =================================================
-       🚀 BOOTSTRAP (USER GESTURE SAFE)
-       ================================================= -->
+  <!-- ==============================
+       🚀 BOOTSTRAP (CRITICAL)
+       ============================== -->
   <script>
     document.getElementById("startBtn").addEventListener("click", function () {
 
-      // 🔊 Audio unlock (mobile requirement)
+      // 🔊 Unlock audio (mobile browsers require this)
       if (window.TTS && TTS.init) {
         TTS.init();
       }
 
-      // 🧠 Core start
+      // 🧠 Start core
       if (window.AnjaliCore && AnjaliCore.start) {
         AnjaliCore.start();
       }
 
-      // 🎤 Start continuous listening (Level-4)
+      // 🎤 FIRST mic permission trigger
+      if (window.STT && STT.start) {
+        STT.start();
+      }
+
+      // 🔁 Continuous long listening
       if (window.STT_LongListening) {
         STT_LongListening.start();
       }
+
     });
   </script>
 
