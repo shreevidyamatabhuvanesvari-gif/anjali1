@@ -1,130 +1,99 @@
 /* ==========================================================
-   STT_LongListening.js
+   voice/stt.js
    Level-4 / Version-4.x
    ROLE:
-   True continuous, human-like listening for Anjali.
-   Works with event-based STT (onResult / onEnd / onError)
+   True microphone Speech-To-Text engine for Anjali.
+   Uses browser Web Speech API.
+   Works with STT_LongListening.js
    ========================================================== */
 
 (function (window) {
   "use strict";
 
-  if (!window.STT) {
-    console.error("STT_LongListening: base STT missing");
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("यह ब्राउज़र Speech Recognition सपोर्ट नहीं करता। Chrome उपयोग करें।");
     return;
   }
 
-  /* ===============================
-     INTERNAL STATE
-     =============================== */
-  let enabled = false;
+  let recognition = null;
   let listening = false;
-  let lastHeardAt = 0;
 
-  const SILENCE_TIMEOUT = 12000; // 12 seconds
-  const RESTART_DELAY = 900;    // ms
+  function createRecognition() {
+    const r = new SpeechRecognition();
 
-  function now() {
-    return Date.now();
-  }
+    r.lang = "hi-IN";         // Hindi first
+    r.continuous = false;    // LongListening will restart it
+    r.interimResults = false;
+    r.maxAlternatives = 1;
 
-  /* ===============================
-     ATTACH STT EVENTS
-     =============================== */
-  function attachSTT() {
-    STT.onResult = function (text) {
-      lastHeardAt = now();
-      if (!text) return;
+    r.onresult = function (event) {
+      if (!event.results || !event.results[0]) return;
 
-      // 🌸 Presence
-      if (window.AnjaliPresence) {
-        AnjaliPresence.onUserSpeech(text);
-      }
+      const text = event.results[0][0].transcript;
 
-      // 🧠 Reasoning
-      if (window.ReasoningEngine && ReasoningEngine.process) {
-        ReasoningEngine.process(text);
+      if (window.STT.onResult) {
+        window.STT.onResult(text);
       }
     };
 
-    STT.onEnd = function () {
-      listening = false;
-      if (!enabled) return;
-
-      // auto restart
-      setTimeout(startListening, RESTART_DELAY);
+    r.onerror = function () {
+      if (window.STT.onError) {
+        window.STT.onError();
+      }
     };
 
-    STT.onError = function () {
+    r.onend = function () {
       listening = false;
-      if (!enabled) return;
-
-      setTimeout(startListening, RESTART_DELAY + 500);
+      if (window.STT.onEnd) {
+        window.STT.onEnd();
+      }
     };
+
+    return r;
   }
 
   /* ===============================
-     SAFE START
+     PUBLIC STT API
      =============================== */
-  function startListening() {
-    if (!enabled || listening) return;
+  window.STT = {
+    onResult: null,
+    onEnd: null,
+    onError: null,
 
-    try {
-      attachSTT();
-      listening = true;
-      STT.start();
-    } catch (e) {
-      listening = false;
-    }
-  }
-
-  /* ===============================
-     STOP
-     =============================== */
-  function stopListening() {
-    enabled = false;
-    listening = false;
-    try {
-      if (STT.stop) STT.stop();
-    } catch {}
-  }
-
-  /* ===============================
-     SILENCE MONITOR
-     =============================== */
-  setInterval(function () {
-    if (!enabled || !listening) return;
-
-    if (now() - lastHeardAt > SILENCE_TIMEOUT) {
-      try {
-        if (STT.stop) STT.stop();
-      } catch {}
-    }
-  }, 3000);
-
-  /* ===============================
-     PUBLIC API
-     =============================== */
-  window.STT_LongListening = Object.freeze({
     start() {
-      enabled = true;
-      lastHeardAt = now();
-      startListening();
+      if (listening) return;
+
+      try {
+        if (!recognition) {
+          recognition = createRecognition();
+        }
+
+        listening = true;
+        recognition.start();
+      } catch (e) {
+        listening = false;
+      }
     },
 
     stop() {
-      stopListening();
+      try {
+        if (recognition) {
+          recognition.stop();
+        }
+      } catch (e) {}
+      listening = false;
     },
 
     status() {
       return {
-        enabled,
         listening,
-        lastHeardAt,
-        role: "long-listening",
-        level: "4.x"
+        engine: "browser-speech-api",
+        language: "hi-IN"
       };
     }
-  });
+  };
 
 })(window);
