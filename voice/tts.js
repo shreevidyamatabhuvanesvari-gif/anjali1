@@ -1,20 +1,20 @@
 /* ==========================================================
    voice/tts.js
    ROLE:
-   Soft female voice for Anjali
-   Uses SpeechGate to survive mobile Chrome restrictions
+   Soft, human, smiling female voice for Anjali
+   Works in Chrome Android
    ========================================================== */
 
 (function (window) {
   "use strict";
 
   let voices = [];
+  let unlocked = false;
 
   function loadVoices() {
     voices = window.speechSynthesis.getVoices();
   }
-
-  window.speechSynthesis.onvoiceschanged = loadVoices;
+  speechSynthesis.onvoiceschanged = loadVoices;
   loadVoices();
 
   function pickVoice() {
@@ -25,78 +25,81 @@
     ) || voices[0];
   }
 
-  /* ==========================================================
-     SPEAK — goes through SpeechGate
-     ========================================================== */
+  function humanize(text) {
+    return String(text)
+      .replace(/।/g, "… ")
+      .replace(/\?/g, "…?")
+      .replace(/!/g, "…!")
+      .replace(/,/g, ", ")
+      .replace(/\n/g, "… ");
+  }
+
   function speak(text, opts = {}) {
-    if (!window.SpeechGate || !SpeechGate.isUnlocked()) {
-      console.warn("TTS blocked: SpeechGate not unlocked");
-      return;
+    if (!unlocked || !text) return;
+
+    const parts = humanize(text).split("…");
+
+    let i = 0;
+
+    function speakNext() {
+      if (i >= parts.length) return;
+
+      const part = parts[i].trim();
+      i++;
+
+      if (!part) {
+        speakNext();
+        return;
+      }
+
+      const u = new SpeechSynthesisUtterance(part);
+
+      const v = pickVoice();
+      if (v) u.voice = v;
+
+      // 🌸 Anjali voice personality
+      const baseRate = 0.75;
+      const basePitch = 1.15;
+
+      u.rate  = baseRate  + Math.random() * 0.06;
+      u.pitch = basePitch + Math.random() * 0.05;
+      u.volume = 0.7;
+
+      u.onend = () => {
+        setTimeout(speakNext, 180); // micro-pause between thoughts
+      };
+
+      try {
+        speechSynthesis.speak(u);
+      } catch {}
     }
-    if (!text) return;
 
-    const u = new SpeechSynthesisUtterance(text);
-    const v = pickVoice();
-    if (v) u.voice = v;
-
-    /* 🌸 ANJALI VOICE PERSONALITY 🌸 */
-    u.rate   = typeof opts.rate === "number" ? opts.rate : 0.78;
-    u.pitch  = typeof opts.pitch === "number" ? opts.pitch : 1.18;
-    u.volume = typeof opts.volume === "number" ? opts.volume : 0.6;
-
-    // मुस्कराकर बोलने का एहसास
-    u.text = String(text)
-      .replace(/([।?!])/g, "$1…")
-      .replace(/,/g, ", ");
-
-    const smile = 0.02 + Math.random() * 0.03;
-    u.pitch += smile;
-
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch (e) {
-      // भाव नहीं टूटना चाहिए
-    }
+    speechSynthesis.cancel();
+    speakNext();
   }
 
-  /* ==========================================================
-     PRESENCE TONE (AnjaliPresence uses this)
-     ========================================================== */
-  function playTone({ frequency = 400, duration = 300, volume = 0.2 }) {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+  function playTone({ frequency = 420, duration = 300, volume = 0.15 }) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-      osc.frequency.value = frequency;
-      gain.gain.value = volume;
+    osc.frequency.value = frequency;
+    gain.gain.value = volume;
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
 
-      osc.start();
-      setTimeout(() => {
-        osc.stop();
-        ctx.close();
-      }, duration);
-    } catch {}
+    osc.start();
+    setTimeout(() => {
+      osc.stop();
+      ctx.close();
+    }, duration);
   }
 
-  /* ==========================================================
-     INIT — must be called from button click
-     ========================================================== */
   function init() {
-    if (window.SpeechGate) {
-      SpeechGate.unlock();   // 🔓 critical
-    }
-
-    // tiny silent utterance to bind speech to gesture
-    try {
-      const u = new SpeechSynthesisUtterance(" ");
-      u.volume = 0;
-      speechSynthesis.speak(u);
-    } catch {}
+    unlocked = true;
+    const u = new SpeechSynthesisUtterance(" ");
+    speechSynthesis.speak(u); // unlock audio on mobile
   }
 
   window.TTS = {
