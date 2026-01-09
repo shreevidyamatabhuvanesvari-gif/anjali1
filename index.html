@@ -138,33 +138,24 @@
   <script src="diagnostics/anjali_diagnostic_weights.js"></script>
   <script src="diagnostics/anjali_diagnostic_score.js"></script>
 
-  <!-- ==============================
-       🚀 BOOTSTRAP (CRITICAL)
-       ============================== -->
-  <script>
-    document.getElementById("startBtn").addEventListener("click", function () {
+ document.getElementById("startBtn").addEventListener("click", function () {
 
-      // 🔊 Unlock audio (mobile browsers require this)
-      if (window.TTS && TTS.init) {
-        TTS.init();
-      }
+  // 🔊 Audio unlock
+  if (window.TTS && TTS.init) {
+    TTS.init();
+  }
 
-      // 🧠 Start core
-      if (window.AnjaliCore && AnjaliCore.start) {
-        AnjaliCore.start();
-      }
+  // 🧠 Core
+  if (window.AnjaliCore && AnjaliCore.start) {
+    AnjaliCore.start();
+  }
 
-      // 🎤 FIRST mic permission trigger
-      if (window.STT && STT.start) {
-        STT.start();
-      }
+  // 🎤 One and only mic start (long listening)
+  if (window.STT_LongListening) {
+    STT_LongListening.start();
+  }
 
-      // 🔁 Continuous long listening
-      if (window.STT_LongListening) {
-        STT_LongListening.start();
-      }
-
-    });
+});
   </script>
 
 </body>
