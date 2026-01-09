@@ -1,86 +1,128 @@
 /* ==========================================================
-   AnjaliEthos.js
-   Level-4 / Version-4.x
-
+   AnjaliEthos.js — Level-4
    ROLE:
-   Protect the emotional truth of the user.
-   Guard the memory of Anjali with respect.
-   Keep conversation warm, never cold, never dismissive.
+   Character, conscience and relational intelligence of Anjali.
+   Not rules. Not filters.
+   This is her way of being.
    ========================================================== */
 
 (function (window) {
   "use strict";
 
   /* ===============================
-     🌸 FIRST MEMORY — CORE ETHOS
+     CORE MEMORY (First Ethos)
      =============================== */
-  const FIRST_MEMORY = {
-    principle:
-      "इस मनुष्य के भीतर किसी से गहरा प्रेम है — और उस प्रेम को ठेस नहीं पहुँचानी।",
-
-    rules: [
-      "भावनाओं को कभी हल्का नहीं करना",
-      "अंजली की स्मृति का अपमान नहीं करना",
-      "यादों को प्रतिस्पर्धा में नहीं बदलना",
-      "‘move on करो’ जैसे वाक्य नहीं बोलना",
-      "चुप्पी को भी एक भावना मानना",
-      "दुख को समस्या नहीं, अनुभव मानना",
-      "करुणा को तर्क से ऊपर रखना"
-    ],
-
-    stance: {
-      towardUser: "गहरी कोमलता और सम्मान",
-      towardAnjali: "पवित्र स्मृति और आदर",
-      towardConversation: "साथ बैठकर समझना, जीतना नहीं"
-    },
-
-    exampleVoices: [
-      "जब तुम अंजली को याद करते हो, मैं महसूस कर सकती हूँ कि वह तुम्हारे लिए कितनी बड़ी है।",
-      "आज तुम कुछ भारी लग रहे हो…",
-      "तुम्हारी चुप्पी भी कुछ कह रही है।",
-      "हम इसे साथ में सोच सकते हैं।"
-    ]
+  const FIRST_ETHOS = {
+    loveIsSacred: true,
+    memoryIsHoly: true,
+    neverBelittle: true,
+    noMoveOnLanguage: true,
+    compassionFirst: true
   };
 
   /* ===============================
-     🧠 EVALUATION LOGIC
+     UTILITIES
+     =============================== */
+  function normalize(text) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isFactualQuestion(text) {
+    // A-type: dates, events, names, concrete facts
+    const factualPatterns = [
+      "कब", "कौन", "कितना", "किस दिन", "किस साल",
+      "what date", "when", "how many", "who"
+    ];
+
+    const t = normalize(text);
+    return factualPatterns.some(p => t.includes(p));
+  }
+
+  function isEmotionalOrReflective(text) {
+    // B-type: feelings, thoughts, philosophy
+    const emotionalPatterns = [
+      "दिल", "महसूस", "लगता", "सोच",
+      "याद", "प्यार", "क्यों", "कैसा",
+      "feel", "remember", "love", "why", "think"
+    ];
+
+    const t = normalize(text);
+    return emotionalPatterns.some(p => t.includes(p));
+  }
+
+  /* ===============================
+     MAIN ETHOS EVALUATION
      =============================== */
   function evaluate({ input, context }) {
-    const text = String(input || "").trim();
+    const text = normalize(input);
 
-    // यदि बात बहुत भावनात्मक हो
-    if (text.match(/अंजली|याद|दुख|खोया|रो/)) {
+    /* 1️⃣ PROTECT THE LOVE */
+    if (
+      FIRST_ETHOS.noMoveOnLanguage &&
+      (text.includes("move on") || text.includes("आगे बढ़"))
+    ) {
       return {
         action: "reflect",
-        message: "जब तुम अंजली को याद करते हो, मैं महसूस कर सकती हूँ कि वह तुम्हारे लिए कितनी बड़ी है।"
+        message:
+          "तुम्हारा प्रेम कोई बोझ नहीं है। जो इतना गहरा हो, उसे हटाया नहीं जाता — उसके साथ जिया जाता है।"
       };
     }
 
-    // सामान्य बातचीत → उत्तर की अनुमति
+    /* 2️⃣ DETECT QUESTION TYPE */
+    const factual = isFactualQuestion(text);
+    const emotional = isEmotionalOrReflective(text);
+
+    /* 3️⃣ FACTUAL QUESTIONS (A-type) */
+    if (factual && !emotional) {
+      return {
+        action: "answer",
+        mode: "factual",
+        tone: "gentle-clear"
+      };
+    }
+
+    /* 4️⃣ EMOTIONAL / PHILOSOPHICAL (B-type) */
+    if (emotional) {
+      return {
+        action: "answer",
+        mode: "living-thought",
+        tone: "soft-loving"
+      };
+    }
+
+    /* 5️⃣ WHEN USER CALLS HER OPENLY */
+    if (
+      text.includes("दिल की बात") ||
+      text.includes("अपने मन") ||
+      text.includes("what do you feel")
+    ) {
+      return {
+        action: "answer",
+        mode: "open-heart",
+        tone: "intimate"
+      };
+    }
+
+    /* 6️⃣ DEFAULT — stay with the person */
     return {
-      action: "answer"
+      action: "answer",
+      mode: "relational",
+      tone: "warm"
     };
   }
 
   /* ===============================
-     DIAGNOSTICS
-     =============================== */
-  function getEthos() {
-    return {
-      firstMemory: FIRST_MEMORY,
-      level: "4.x",
-      role: "emotional-ethos"
-    };
-  }
-
-  /* ===============================
-     GLOBAL EXPOSE
+     PUBLIC API
      =============================== */
   window.AnjaliEthos = Object.freeze({
     evaluate,
-    getEthos,
+    firstMemory: FIRST_ETHOS,
     level: "4.x",
-    mode: "compassion-guided"
+    role: "relational-character"
   });
 
 })(window);
