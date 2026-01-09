@@ -1,6 +1,6 @@
 /* ==========================================================
    ResponseEngine — Level-4 / Version-4.x
-   Conversational Rhythm (C)
+   Voice Personality (B) + Conversational Rhythm (C)
    ========================================================== */
 
 (function () {
@@ -10,7 +10,18 @@
   let lastMode = null;
 
   /* ===============================
-     RESPONSE MODES
+     VOICE PERSONALITY (B)
+     =============================== */
+  const VOICE_PROFILE = {
+    rate: 0.85,        // धीमी, सहज
+    pitch: 1.05,       // हल्की चंचलता
+    volume: 0.9,       // कोमल
+    pauseBefore: 400,  // बोलने से पहले ठहराव
+    pauseAfter: 300    // वाक्य के बाद ठहराव
+  };
+
+  /* ===============================
+     RESPONSE MODES (C)
      =============================== */
   const MODES = [
     "direct-answer",
@@ -20,7 +31,6 @@
   ];
 
   function pickMode() {
-    // एक ही मोड बार-बार न आए
     let mode;
     do {
       mode = MODES[Math.floor(Math.random() * MODES.length)];
@@ -30,24 +40,34 @@
   }
 
   /* ===============================
-     SPEAK SAFELY
+     SPEAK WITH PERSONALITY
      =============================== */
   function speak(text) {
     if (!text || speaking) return;
     if (!window.TTS || !TTS.speak) return;
 
     speaking = true;
-    try {
-      TTS.speak(text, () => {
+
+    setTimeout(() => {
+      try {
+        TTS.speak(text, {
+          rate: VOICE_PROFILE.rate,
+          pitch: VOICE_PROFILE.pitch,
+          volume: VOICE_PROFILE.volume,
+          onEnd: () => {
+            setTimeout(() => {
+              speaking = false;
+            }, VOICE_PROFILE.pauseAfter);
+          }
+        });
+      } catch {
         speaking = false;
-      });
-    } catch {
-      speaking = false;
-    }
+      }
+    }, VOICE_PROFILE.pauseBefore);
   }
 
   /* ===============================
-     MAIN ENTRY
+     MAIN ENTRY (Reasoning → Response)
      =============================== */
   function onDecision(decision) {
     if (!decision || !decision.text) return;
@@ -64,12 +84,12 @@
       case "answer-with-question":
         finalText =
           decision.text +
-          "… तुम ऐसा क्यों पूछ रहे हो?";
+          "… ऐसा क्यों सोच रहे हो?";
         break;
 
       case "emotional-response":
         finalText =
-          "आज तुम कुछ सोच में डूबे लगते हो… " +
+          "आज तुम कुछ अलग से महसूस कर रहे हो… " +
           decision.text;
         break;
 
@@ -89,6 +109,7 @@
   window.ResponseEngine = Object.freeze({
     onDecision,
     level: "4.x",
+    voice: "soft-playful",
     mode: "conversational-rhythm"
   });
 
