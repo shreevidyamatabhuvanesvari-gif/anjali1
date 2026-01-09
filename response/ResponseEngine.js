@@ -1,96 +1,113 @@
 /* ==========================================================
    ResponseEngine.js
-   Level-4 / Version-4.x (FINAL – VOICE SAFE)
+   Level-4 / Version-4.x (FINAL)
    ROLE:
-   Living conversation with warmth, rhythm & presence
+   Living conversation with restraint, warmth & presence
+   Integrates:
+   A️⃣ Presence
+   B️⃣ Voice Personality
+   C️⃣ Conversational Rhythm
    ========================================================== */
 
 (function (window) {
   "use strict";
 
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
   let lastSpokenAt = 0;
   let presenceRecently = false;
 
-  const MIN_SPEAK_GAP = 5000; // 5s (7s was too long and killed voice)
+  const MIN_SPEAK_GAP = 7000; // 7 seconds
 
   function now() {
     return Date.now();
   }
 
   /* ===============================
-     PRESENCE COORDINATION
+     PRESENCE COORDINATION (A)
      =============================== */
   window.addEventListener("anjali:presence-activated", function () {
     presenceRecently = true;
 
-    // Presence सिर्फ़ बोलने का स्टाइल बदलेगा, रोकेगा नहीं
+    // Presence के बाद थोड़ी देर तक जवाब नहीं
     setTimeout(function () {
       presenceRecently = false;
-    }, 1200);
+    }, 2000);
   });
 
   /* ===============================
      VOICE PERSONALITY (B)
+     Soft | Warm | Smiling | Gentle
      =============================== */
   function speakSoftly(text) {
     if (!window.TTS || typeof window.TTS.speak !== "function") return;
-    if (!text) return;
 
     try {
       window.TTS.speak(text, {
-        rate: 0.88,
-        pitch: 1.08,
-        volume: 0.85
+        rate: 0.88,     // धीमी, शांत
+        pitch: 1.08,   // हल्की स्त्री चंचलता
+        volume: 0.85   // मुस्कुराती गर्माहट
       });
-    } catch (_) {}
+    } catch (e) {
+      // भाव टूटना नहीं चाहिए
+    }
   }
 
   /* ===============================
-     RHYTHM (C) — FIXED
+     RHYTHM DECISION (C)
      =============================== */
   function decideMode(result) {
     const t = now();
 
-    // बहुत जल्दी रिपीट न हो
-    if (t - lastSpokenAt < MIN_SPEAK_GAP) {
-      return "soft";   // presence नहीं, soft बोलो
-    }
+    // Presence को प्राथमिकता
+    if (presenceRecently) return "presence";
+
+    // बहुत जल्दी-जल्दी नहीं बोलना
+    if (t - lastSpokenAt < MIN_SPEAK_GAP) return "presence";
 
     if (!result || typeof result.confidence !== "number") {
-      return "soft";
+      return "gentle-answer";
     }
 
-    if (result.confidence < 0.45) return "reflect";
-    if (result.confidence < 0.75) return "soft";
+    if (result.confidence < 0.45) return "reflective-question";
+    if (result.confidence < 0.75) return "gentle-answer";
 
-    return "full";
+    return "answer-plus";
   }
 
   /* ===============================
-     RESPONSE MODES
+     RESPONSE FORMS
      =============================== */
 
-  function softAnswer(text) {
+  function gentleAnswer(text) {
     speakSoftly(text);
   }
 
-  function reflect() {
+  function reflectiveQuestion() {
     const prompts = [
       "तुम ऐसा क्यों महसूस कर रहे हो?",
       "क्या यह बात तुम्हें भीतर से छू रही है?",
       "क्या हम इसे थोड़ा और साथ में सोचें?"
     ];
-    speakSoftly(prompts[Math.floor(Math.random() * prompts.length)]);
+    const q = prompts[Math.floor(Math.random() * prompts.length)];
+    speakSoftly(q);
   }
 
-  function fullAnswer(text) {
+  function answerPlus(text) {
     speakSoftly(text);
 
-    if (Math.random() < 0.35) {
+    // कभी-कभी संवाद जोड़ना
+    if (Math.random() < 0.4) {
       setTimeout(function () {
         speakSoftly("…और तुम क्या सोचते हो?");
-      }, 2000);
+      }, 2200);
     }
+  }
+
+  function silentPresence() {
+    // जानबूझकर कुछ नहीं कहना
+    // PresenceEngine ने पहले ही उपस्थिति दी है
   }
 
   /* ===============================
@@ -103,39 +120,47 @@
     lastSpokenAt = now();
 
     switch (mode) {
-      case "reflect":
-        reflect();
+      case "gentle-answer":
+        gentleAnswer(finalDecision.text);
         break;
 
-      case "full":
-        fullAnswer(finalDecision.text);
+      case "reflective-question":
+        reflectiveQuestion();
         break;
 
-      case "soft":
+      case "answer-plus":
+        answerPlus(finalDecision.text);
+        break;
+
+      case "presence":
       default:
-        softAnswer(finalDecision.text);
+        silentPresence();
         break;
     }
   }
 
   /* ===============================
-     STATUS
+     DIAGNOSTIC
      =============================== */
   function getStatus() {
     return {
       lastSpokenAt,
       role: "response-engine",
       level: "4.x",
-      voiceAlive: true,
+      personality: "soft-playful-calm",
+      rhythm: "human-like",
       presenceAware: presenceRecently
     };
   }
 
+  /* ===============================
+     GLOBAL EXPOSE
+     =============================== */
   window.ResponseEngine = Object.freeze({
     respond,
     getStatus,
     level: "4.x",
-    mode: "voice-safe-conversation"
+    mode: "conversational"
   });
 
 })(window);
