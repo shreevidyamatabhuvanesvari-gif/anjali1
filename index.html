@@ -84,29 +84,24 @@
 
   <div class="anjali-container">
 
-    <!-- 🌸 REAL AVATAR (आप अपनी फोटो यहाँ रखें) -->
     <img
       src="assets/anjali_avatar.jpg"
       alt="Anjali"
       class="avatar"
     />
 
-    <!-- 🌸 NAME (कोई घोषणा नहीं) -->
     <div class="title">अंजली</div>
     <div class="subtitle">…यहीं है</div>
 
-    <!-- 🌸 SHAYARI (ज्यों-की-त्यों) -->
     <div class="shayari">
       जो फूल यहां पर खिल न सके, ओ फूल वहां खिल जायेगें।<br/>
       हम इस दुनियाँ में मिल न सके, उस दुनियाँ में मिल जायेगें।।
     </div>
 
-    <!-- 🎤 LISTEN BUTTON -->
     <button class="listen-btn" id="startBtn">
       ए सुनो…
     </button>
 
-    <!-- 🌸 EMOTIONAL HINT (सुधारा हुआ) -->
     <div class="hint">
       बोलिए…<br/>
       अंजली सुन रही है।
@@ -124,6 +119,8 @@
   <!-- VOICE -->
   <script src="voice/tts.js"></script>
   <script src="voice/stt.js"></script>
+  <!-- ✅ LONG LISTENING LAYER -->
+  <script src="voice/STT_LongListening.js"></script>
 
   <!-- KNOWLEDGE + MEMORY -->
   <script src="learning/KnowledgeBase.js"></script>
@@ -162,9 +159,9 @@
         AnjaliCore.start();
       }
 
-      // 🎤 Start listening
-      if (window.STT && STT.start) {
-        STT.start();
+      // 🎤 Start continuous listening (Level-4)
+      if (window.STT_LongListening) {
+        STT_LongListening.start();
       }
     });
   </script>
