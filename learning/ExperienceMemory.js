@@ -1,142 +1,178 @@
 /* ==========================================================
-   ExperienceMemory.js — Level-4
+   ExperienceMemory.js — Level-4 / FINAL
    ROLE:
-   Store emotionally meaningful interactions
-   so AnjaliEthos can learn the relationship,
-   not just the words.
+   Living emotional + contextual memory for Anjali.
+   Stores not just words, but meaning, tone, and relationship.
    ========================================================== */
 
 (function (window) {
   "use strict";
 
-  const STORAGE_KEY = "ANJALI_EXPERIENCE_MEMORY_V1";
-  const MAX_RECORDS = 5000; // long-term but bounded
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
+  const MEMORY_KEY = "ANJALI_EXPERIENCE_MEMORY_V4";
+  const MAX_RECORDS = 1200;
 
-  let memory = [];
+  let records = [];
 
   /* ===============================
-     LOAD FROM STORAGE
+     LOAD / SAVE
      =============================== */
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    if (Array.isArray(saved)) memory = saved;
-  } catch (e) {
-    memory = [];
-  }
-
-  /* ===============================
-     SAVE TO STORAGE
-     =============================== */
-  function persist() {
+  function load() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(memory));
-    } catch (e) {
-      // storage full or blocked – silently fail
+      const raw = localStorage.getItem(MEMORY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) records = parsed;
+      }
+    } catch (_) {
+      records = [];
     }
   }
 
-  /* ===============================
-     EMOTION DETECTION (soft, not clinical)
-     =============================== */
-  function detectEmotion(text) {
-    const t = String(text || "").toLowerCase();
+  function save() {
+    try {
+      localStorage.setItem(MEMORY_KEY, JSON.stringify(records));
+    } catch (_) {}
+  }
 
-    if (t.includes("याद") || t.includes("miss") || t.includes("अंजली")) return "longing";
-    if (t.includes("रो") || t.includes("दुख") || t.includes("खो")) return "grief";
-    if (t.includes("खुश") || t.includes("मुस्कान")) return "warmth";
-    if (t.includes("डर") || t.includes("घबर")) return "anxiety";
-    if (t.includes("प्रेम") || t.includes("चाह")) return "love";
+  load();
+
+  /* ===============================
+     UTILITIES
+     =============================== */
+  function now() {
+    return Date.now();
+  }
+
+  function normalize(text) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function extractKeywords(text) {
+    return normalize(text)
+      .split(" ")
+      .filter(w => w.length > 2)
+      .slice(0, 10);
+  }
+
+  function detectTone(text) {
+    const t = text.toLowerCase();
+
+    if (t.includes("दुख") || t.includes("रो") || t.includes("खो") || t.includes("याद"))
+      return "sad";
+
+    if (t.includes("खुश") || t.includes("अच्छा") || t.includes("हँस"))
+      return "warm";
+
+    if (t.includes("क्यों") || t.includes("कैसे") || t.includes("समझ"))
+      return "thinking";
+
+    if (t.includes("अंजली"))
+      return "attachment";
 
     return "neutral";
   }
 
   /* ===============================
-     BOND WEIGHT
-     How emotionally close this moment is
-     =============================== */
-  function computeBond(emotion) {
-    switch (emotion) {
-      case "love": return 0.95;
-      case "longing": return 0.9;
-      case "grief": return 0.85;
-      case "warmth": return 0.8;
-      case "anxiety": return 0.7;
-      default: return 0.4;
-    }
-  }
-
-  /* ===============================
-     RECORD AN EXPERIENCE
+     STORE EXPERIENCE
      =============================== */
   function record(userText, anjaliText) {
-    if (!userText && !anjaliText) return;
-
-    const emotion = detectEmotion(userText);
-    const bond = computeBond(emotion);
+    if (!userText) return;
 
     const entry = {
-      userText: userText || "",
-      anjaliText: anjaliText || "",
-      emotion,
-      bondWeight: bond,
-      time: Date.now()
+      id: "E-" + now() + "-" + Math.floor(Math.random() * 9999),
+      time: now(),
+      user: userText,
+      anjali: anjaliText || null,
+      keywords: extractKeywords(userText),
+      tone: detectTone(userText),
+      importance: userText.includes("अंजली") ? 1.0 : 0.6
     };
 
-    memory.push(entry);
+    records.push(entry);
 
-    // trim old memories
-    if (memory.length > MAX_RECORDS) {
-      memory.splice(0, memory.length - MAX_RECORDS);
+    if (records.length > MAX_RECORDS) {
+      records = records.slice(records.length - MAX_RECORDS);
     }
 
-    persist();
+    save();
   }
 
   /* ===============================
-     QUERY RECENT CONTEXT
+     QUERY MEMORY
      =============================== */
-  function getRecent(limit = 10) {
-    return memory.slice(-limit);
+  function findSimilar(queryText) {
+    const qk = extractKeywords(queryText);
+    if (!qk.length) return [];
+
+    return records
+      .map(r => {
+        let score = 0;
+        qk.forEach(k => {
+          if (r.keywords.includes(k)) score++;
+        });
+        return { ...r, score };
+      })
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
   }
 
-  /* ===============================
-     EMOTIONAL STATE SUMMARY
-     =============================== */
-  function getEmotionalState() {
-    if (memory.length === 0) {
-      return {
-        mood: "unknown",
-        bond: 0.5
-      };
-    }
+  function emotionalSummary() {
+    const summary = {
+      sad: 0,
+      warm: 0,
+      thinking: 0,
+      attachment: 0,
+      neutral: 0
+    };
 
-    const recent = memory.slice(-20);
-    let sum = 0;
-    let dominant = {};
-
-    recent.forEach(r => {
-      sum += r.bondWeight;
-      dominant[r.emotion] = (dominant[r.emotion] || 0) + 1;
+    records.forEach(r => {
+      if (summary[r.tone] !== undefined) summary[r.tone]++;
     });
 
-    const mood = Object.keys(dominant).sort((a,b)=>dominant[b]-dominant[a])[0];
+    return summary;
+  }
+
+  /* ===============================
+     PROVIDE TO ETHOS / REASONING
+     =============================== */
+  function getContextForEthos(query) {
+    const similar = findSimilar(query);
+    const emotions = emotionalSummary();
 
     return {
-      mood,
-      bond: Number((sum / recent.length).toFixed(2))
+      similarMemories: similar.map(r => ({
+        user: r.user,
+        tone: r.tone,
+        time: r.time
+      })),
+      emotionalProfile: emotions,
+      totalMemories: records.length
     };
   }
 
   /* ===============================
-     GLOBAL EXPOSE
+     PUBLIC API
      =============================== */
   window.ExperienceMemory = Object.freeze({
     record,
-    getRecent,
-    getEmotionalState,
-    size: () => memory.length,
-    level: "4.x",
-    role: "emotional-memory"
+    findSimilar,
+    getContextForEthos,
+    stats() {
+      return {
+        count: records.length,
+        emotions: emotionalSummary(),
+        role: "experience-memory",
+        level: "4.x"
+      };
+    }
   });
 
 })(window);
