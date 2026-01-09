@@ -1,112 +1,107 @@
 /* ==========================================================
-   AnjaliPresence.js — Step C
-   Conversational Rhythm Engine
+   AnjaliPresence.js
+   Level-4 / Version-4.x
+   ROLE:
+   Create a felt sense of presence when the name "अंजली"
+   is spoken — without identity claims, without text,
+   without verbal declaration.
+
+   Presence ≠ Answer
+   Presence = Listening + Soft Audible Acknowledgement
    ========================================================== */
 
-(function () {
+(function (window) {
   "use strict";
 
+  /* ===============================
+     INTERNAL STATE
+     =============================== */
   let active = false;
-  let lastSpokenAt = 0;
-  let silenceTimer = null;
+  let lastActivatedAt = 0;
 
-  const MIN_GAP = 25 * 1000;   // 25 सेकंड
-  const LONG_SILENCE = 2 * 60 * 1000; // 2 मिनट
+  // Presence should NOT trigger too frequently
+  const MIN_GAP_MS = 8000; // 8 seconds
 
+  /* ===============================
+     SAFE TIME
+     =============================== */
   function now() {
     return Date.now();
+  }
+
+  /* ===============================
+     SOFT PRESENCE SOUND
+     ===============================
+     This is NOT speech.
+     It is a gentle acknowledgement.
+     =============================== */
+  function playPresenceSound() {
+    if (!window.TTS || typeof window.TTS.playTone !== "function") return;
+
+    try {
+      // soft, very short tone
+      window.TTS.playTone({
+        frequency: 420,      // calm, warm range
+        duration: 350,       // milliseconds
+        volume: 0.15,        // very soft
+        fadeOut: true
+      });
+    } catch (e) {
+      // silently ignore — presence must never break flow
+    }
   }
 
   /* ===============================
      ACTIVATE PRESENCE
      =============================== */
   function activate() {
+    const t = now();
+
+    // prevent mechanical repetition
+    if (t - lastActivatedAt < MIN_GAP_MS) return;
+
+    lastActivatedAt = t;
     active = true;
-    lastSpokenAt = now();
-    scheduleSilenceCheck();
+
+    // soft acknowledgement
+    playPresenceSound();
+
+    // Presence auto-settles back to neutral
+    setTimeout(() => {
+      active = false;
+    }, 1200);
   }
 
   /* ===============================
-     USER SPOKE
+     USER SPEECH ENTRY
+     ===============================
+     Called from STT bridge
      =============================== */
   function onUserSpeech(text) {
-    if (!active) return;
-
-    lastSpokenAt = now();
-
-    // हर बार जवाब नहीं
-    if (Math.random() < 0.45) {
-      // मौन — बस सुनना
-      return;
-    }
-
-    // कभी छोटा प्रश्न
-    if (Math.random() < 0.35) {
-      gentleSpeak(randomQuestion());
-      return;
-    }
-
-    // कभी छोटा वाक्य
-    if (Math.random() < 0.2) {
-      gentleSpeak(randomSoftLine());
-    }
-  }
-
-  /* ===============================
-     SILENCE AWARENESS
-     =============================== */
-  function scheduleSilenceCheck() {
-    clearTimeout(silenceTimer);
-
-    silenceTimer = setTimeout(() => {
-      if (!active) return;
-
-      const gap = now() - lastSpokenAt;
-
-      if (gap > LONG_SILENCE) {
-        gentleSpeak("…");
-      }
-
-      scheduleSilenceCheck();
-    }, LONG_SILENCE);
-  }
-
-  /* ===============================
-     VOICE OUTPUT (SAFE)
-     =============================== */
-  function gentleSpeak(text) {
     if (!text) return;
 
-    if (window.TTS && typeof TTS.speak === "function") {
-      try {
-        TTS.speak(text);
-      } catch (e) {
-        // चुपचाप — भाव नहीं टूटना चाहिए
-      }
+    const clean = String(text).trim();
+
+    // Name recognition (Hindi + fallback)
+    if (
+      clean.startsWith("अंजली") ||
+      clean.startsWith("anjali") ||
+      clean.startsWith("ए सुनो")
+    ) {
+      activate();
     }
   }
 
   /* ===============================
-     SOFT CONTENT
+     STATUS (for diagnostics only)
      =============================== */
-  function randomQuestion() {
-    const q = [
-      "क्या तुम ठीक हो?",
-      "थोड़ा थकान लग रही है क्या?",
-      "आज मन कैसा है?",
-      "कुछ कहना चाहते हो?"
-    ];
-    return q[Math.floor(Math.random() * q.length)];
-  }
-
-  function randomSoftLine() {
-    const l = [
-      "मैं सुन रही हूँ…",
-      "ठीक है, बोलते रहो।",
-      "हूँ…",
-      "समय का ध्यान मत रखो।"
-    ];
-    return l[Math.floor(Math.random() * l.length)];
+  function getStatus() {
+    return {
+      active,
+      lastActivatedAt,
+      role: "presence",
+      level: "4.x"
+    };
   }
 
   /* ===============================
@@ -115,8 +110,9 @@
   window.AnjaliPresence = Object.freeze({
     activate,
     onUserSpeech,
+    getStatus,
     level: "4.x",
-    role: "conversational-presence"
+    mode: "felt-presence"
   });
 
-})();
+})(window);
