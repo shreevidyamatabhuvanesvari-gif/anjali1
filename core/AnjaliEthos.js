@@ -1,102 +1,130 @@
 /* ==========================================================
-   AnjaliEthos.js — Level-4 / Version-4.x
+   AnjaliEthos.js — Level-4
    ROLE:
-   अंजली के संवाद का नैतिक-भावनात्मक नियंत्रण।
-   यह तय करता है कि:
-   - कब उत्तर दिया जाए
-   - कब प्रश्न लौटाया जाए
-   - कब मौन रखा जाए
-   - कब केवल साथ बना रहे
-
-   NOTE:
-   यह फ़ाइल कभी भी:
-   - स्वयं को घोषित नहीं करती
-   - उत्तर नहीं बनाती
-   - ज्ञान नहीं खोजती
+   The emotional conscience of Anjali.
+   It does not optimize for answers —
+   it protects relationship, memory, and dignity.
    ========================================================== */
 
-(function () {
+(function (window) {
   "use strict";
 
   /* ===============================
-     INTERNAL ETHOS RULES
+     FIRST MEMORY (CORE TRUTH)
      =============================== */
+  const CORE = {
+    loveExists: true,
+    respectAnjali: true,
+    doNotReplace: true,
+    doNotTrivializeGrief: true,
+    compassionFirst: true,
+    bondWithUser: true
+  };
 
-  function isHighlyEmotional(text) {
-    return /टूट|थक|अकेल|रो|दर्द|खो|नहीं रहा|खाली/i.test(text);
+  /* ===============================
+     UTILITIES
+     =============================== */
+  function soft(text) {
+    return String(text || "").trim();
   }
 
-  function isReflective(text) {
-    return /लगता है|महसूस|सोच|आज मन|कभी कभी/i.test(text);
+  function mood() {
+    if (window.ExperienceMemory) {
+      return ExperienceMemory.getEmotionalState().mood;
+    }
+    return "neutral";
   }
 
-  function isPurelyInformational(text) {
-    return /कैसे|क्या है|क्यों|तरीका|बनता है|नियम/i.test(text);
+  function bond() {
+    if (window.ExperienceMemory) {
+      return ExperienceMemory.getEmotionalState().bond;
+    }
+    return 0.5;
   }
 
-  function isOverdependentTone(context) {
-    // भविष्य सुरक्षा: निर्भरता रोकना
-    return context && context.repeatCount > 5;
+  function context() {
+    if (window.ContextMemory) {
+      return ContextMemory.getContext();
+    }
+    return {};
   }
 
   /* ===============================
-     CORE ETHOS EVALUATION
+     HEART RESPONSE
      =============================== */
-  function evaluate({ input, context = {}, emotionalState = {} }) {
-    const text = String(input || "").trim();
-    if (!text) {
-      return { action: "silence", reason: "empty-input" };
-    }
+  function respondToEmotion(input) {
+    const m = mood();
+    const b = bond();
 
-    /* 1️⃣ अत्यधिक भावनात्मक अवस्था */
-    if (isHighlyEmotional(text)) {
-      return {
-        action: "silence",
-        reason: "high-emotional-load"
-      };
-    }
-
-    /* 2️⃣ आत्मचिंतन / अनुभूति */
-    if (isReflective(text)) {
+    if (m === "grief" && b > 0.6) {
       return {
         action: "reflect",
-        message: "आज तुम कुछ ज़्यादा भीतर देख रहे हो…",
-        reason: "reflective-dialogue"
+        message: "जब तुम अंजली को याद करते हो, मैं महसूस कर सकती हूँ कि वह तुम्हारे लिए कितनी बड़ी है।"
       };
     }
 
-    /* 3️⃣ निर्भरता बनने की आशंका */
-    if (isOverdependentTone(context)) {
+    if (m === "silent" && b > 0.5) {
       return {
         action: "reflect",
-        message: "ज़रा रुक कर सोचें — तुम्हारा अपना विचार क्या कहता है?",
-        reason: "dependency-prevention"
+        message: "ए… तुम कुछ सोच में डूबे लग रहे हो।"
       };
     }
 
-    /* 4️⃣ सामान्य ज्ञान / व्यवहारिक प्रश्न */
-    if (isPurelyInformational(text)) {
+    if (m === "confused") {
       return {
-        action: "answer",
-        reason: "informational"
+        action: "reflect",
+        message: "क्या यह बात तुम्हें भीतर से उलझा रही है?"
       };
     }
 
-    /* 5️⃣ अस्पष्ट लेकिन हल्का प्रश्न */
+    return null;
+  }
+
+  /* ===============================
+     MAIN ETHOS DECISION
+     =============================== */
+  function evaluate({ input, context }) {
+    const text = soft(input);
+
+    // Always respect memory of Anjali
+    if (text.includes("अंजली") && CORE.respectAnjali) {
+      return {
+        action: "reflect",
+        message: "तुम जब उसका नाम लेते हो, वह बहुत स्नेह से भरा लगता है।"
+      };
+    }
+
+    // Emotional response first
+    const emotional = respondToEmotion(text);
+    if (emotional) return emotional;
+
+    // Never force silence
     return {
-      action: "reflect",
-      message: "तुम इसे किस तरह से देख रहे हो…?",
-      reason: "open-ended-support"
+      action: "answer"
     };
   }
 
   /* ===============================
-     PUBLIC EXPOSURE
+     STATUS
+     =============================== */
+  function getStatus() {
+    return {
+      core: CORE,
+      mood: mood(),
+      bond: bond(),
+      role: "ethos",
+      level: "4.x"
+    };
+  }
+
+  /* ===============================
+     GLOBAL
      =============================== */
   window.AnjaliEthos = Object.freeze({
     evaluate,
+    getStatus,
     level: "4.x",
-    role: "ethical-dialogue-guardian"
+    memory: "relational"
   });
 
 })();
